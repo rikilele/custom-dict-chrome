@@ -15,39 +15,76 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   sendResponse(); // for async purposes
   const { selectionText } = request;
   const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
+  if (meaning) {
+    chrome.storage.sync.get("customDictionary", (result) => {
+      const customDictionary = {...result.customDictionary};
+      customDictionary[selectionText] = meaning;
+      chrome.storage.sync.set({ customDictionary });
+    });
+
+    scanAndHighlightText(selectionText, meaning);
+  }
+});
+
+window.addEventListener("load", () => {
   chrome.storage.sync.get("customDictionary", (result) => {
-    const customDictionary = {...result.customDictionary};
-    customDictionary[selectionText] = meaning;
-    chrome.storage.sync.set({ customDictionary });
+    Object.entries({...result.customDictionary}).forEach(([key, value]) => {
+      scanAndHighlightText(key, value);
+    });
   });
 });
 
-let CUSTOM_DICTIONARY;
-chrome.storage.sync.get("customDictionary", (result) => {
-  CUSTOM_DICTIONARY = new Map(Object.entries({...result.customDictionary}));
-});
+// HELPERS
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  for (let [key, { newValue }] of Object.entries(changes)) {
-    if (key === "customDictionary" && namespace === "sync") {
-      CUSTOM_DICTIONARY = new Map(Object.entries(newValue));
+const IGNORED_TAGS = new Set(["SCRIPT", "STYLE"]);
+
+function scanAndHighlightText(text, tooltipText) {
+  const queue = [document.body];
+  let curr;
+  while (curr = queue.pop()) {
+    if (!curr.textContent.match(text)) continue;
+    if (IGNORED_TAGS.has(curr.tagName)) continue;
+    for (let i = 0; i < curr.childNodes.length; i++) {
+      const childNode = curr.childNodes[i];
+      switch (childNode.nodeType) {
+        case Node.ELEMENT_NODE: {
+          queue.push(childNode);
+          break;
+        }
+
+        case Node.TEXT_NODE: {
+          if (
+            childNode.textContent.match(text)
+            && !IGNORED_TAGS.has(childNode.tagName)
+          ) {
+            const wrapperSpan = document.createElement("span");
+            childNode.textContent.split(text).forEach((t, index) => {
+              if (index !== 0) {
+                const span = document.createElement("span");
+                span.setAttribute("class", "custom-dictionary-tooltip");
+                const tooltip = document.createElement("span");
+                tooltip.setAttribute("class", "custom-dictionary-tooltip-text");
+                tooltip.appendChild(document.createTextNode(tooltipText));
+                span.appendChild(tooltip);
+                span.appendChild(document.createTextNode(text));
+                wrapperSpan.appendChild(span);
+              }
+
+              wrapperSpan.appendChild(document.createTextNode(t));
+            });
+
+            curr.replaceChild(wrapperSpan, childNode);
+          }
+
+          break;
+        }
+
+        default: break;
+      }
     }
   }
-});
+}
 
-document.addEventListener("selectionchange", () => {
-  const selectedText = document.getSelection().toString();
-  if (selectedText !== "" && CUSTOM_DICTIONARY.has(selectedText)) {
-    const span = document.createElement("span");
-    span.innerText = CUSTOM_DICTIONARY.get(selectedText);
-    span.style.backgroundColor = "rgb(255,215,0,.4)";
-    const range = document.getSelection().getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(span);
-  }
-});
-
-// HELPER
 function buildMessage(title, content) {
   return {
     from: SCRIPT_NAME,
