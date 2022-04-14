@@ -6,7 +6,7 @@
 
 .custom-dictionary-tooltip .custom-dictionary-tooltip-text {
   visibility: hidden;
-  bottom: 150%;
+  bottom: 120%;
   left: 50%;
   background-color: rgba(0, 0, 0, .8);
   color: #fff;
