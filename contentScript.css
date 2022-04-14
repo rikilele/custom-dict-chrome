@@ -16,6 +16,9 @@
   transform: translateX(-50%);
   position: absolute;
   z-index: 1;
+  max-width: 30vw;
+  overflow: auto;
+  white-space: pre;
 }
 
 .custom-dictionary-tooltip .custom-dictionary-tooltip-text::after {
