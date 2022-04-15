@@ -4,10 +4,18 @@ const REMOVE_CONTEXT_MENU = "customDictionaryRemoveContextMenu";
 const ADD_CONTEXT_MENU = "customDictionaryAddContextMenu";
 
 document.addEventListener("selectionchange", () => {
-  chrome.runtime.sendMessage(buildMessage(REMOVE_CONTEXT_MENU));
+  chrome.runtime.sendMessage({
+    from: SCRIPT_NAME,
+    title: REMOVE_CONTEXT_MENU,
+  });
+
   const selectedText = document.getSelection().toString();
   if (selectedText !== "") {
-    chrome.runtime.sendMessage(buildMessage(ADD_CONTEXT_MENU, selectedText));
+    chrome.runtime.sendMessage({
+      from: SCRIPT_NAME,
+      title: ADD_CONTEXT_MENU,
+      content: selectedText,
+    });
   }
 });
 
@@ -40,40 +48,25 @@ const IGNORED_TAGS = new Set(["SCRIPT", "STYLE"]);
 
 function scanAndHighlightText(text, tooltipText) {
   const queue = [document.body];
-  let curr;
-  while (curr = queue.pop()) {
-    if (!curr.textContent.match(text)) continue;
-    if (IGNORED_TAGS.has(curr.tagName)) continue;
-    for (let i = 0; i < curr.childNodes.length; i++) {
-      const childNode = curr.childNodes[i];
+  let currNode;
+  while (currNode = queue.pop()) {
+    if (!currNode.textContent.includes(text)) continue;
+    if (IGNORED_TAGS.has(currNode.tagName)) continue;
+    if (currNode.classList.contains("custom-dictionary-tooltip")) continue;
+    if (currNode.classList.contains("custom-dictionary-tooltip-text")) continue;
+    currNode.childNodes.forEach((childNode) => {
       switch (childNode.nodeType) {
+
         case Node.ELEMENT_NODE: {
           queue.push(childNode);
           break;
         }
 
         case Node.TEXT_NODE: {
-          if (
-            childNode.textContent.match(text)
-            && !IGNORED_TAGS.has(childNode.tagName)
-          ) {
-            const wrapperSpan = document.createElement("span");
-            childNode.textContent.split(text).forEach((t, index) => {
-              if (index !== 0) {
-                const span = document.createElement("span");
-                span.setAttribute("class", "custom-dictionary-tooltip");
-                const tooltip = document.createElement("span");
-                tooltip.setAttribute("class", "custom-dictionary-tooltip-text");
-                tooltip.appendChild(document.createTextNode(tooltipText));
-                span.appendChild(tooltip);
-                span.appendChild(document.createTextNode(text));
-                wrapperSpan.appendChild(span);
-              }
-
-              wrapperSpan.appendChild(document.createTextNode(t));
-            });
-
-            curr.replaceChild(wrapperSpan, childNode);
+          const paragraph = childNode.textContent;
+          if (paragraph.includes(text)) {
+            const wrapperSpan = createTooltip(paragraph, text, tooltipText);
+            currNode.replaceChild(wrapperSpan, childNode);
           }
 
           break;
@@ -81,14 +74,37 @@ function scanAndHighlightText(text, tooltipText) {
 
         default: break;
       }
-    }
+    });
   }
 }
 
-function buildMessage(title, content) {
-  return {
-    from: SCRIPT_NAME,
-    title,
-    content,
-  };
+function createTooltip(paragraph, word, tooltipText) {
+  const wrapperSpan = document.createElement("span");
+  paragraph.split(word).forEach((t, i) => {
+    if (i !== 0) {
+      const span = document.createElement("span");
+      span.setAttribute("class", "custom-dictionary-tooltip");
+      const tooltip = document.createElement("span");
+      tooltip.setAttribute("class", "custom-dictionary-tooltip-text");
+      tooltip.appendChild(document.createTextNode(tooltipText));
+      span.appendChild(tooltip);
+      const textNode = document.createTextNode(word);
+      span.appendChild(textNode);
+      span.addEventListener("mouseenter", () => {
+        const { top, left, width } = span.getBoundingClientRect();
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.transform = `
+          translateY(-128%)
+          translateX(calc(-48% + ${width / 2}px))
+        `;
+      });
+
+      wrapperSpan.appendChild(span);
+    }
+
+    wrapperSpan.appendChild(document.createTextNode(t));
+  });
+
+  return wrapperSpan;
 }

@@ -6,16 +6,15 @@
 
 .custom-dictionary-tooltip .custom-dictionary-tooltip-text {
   visibility: hidden;
-  bottom: 120%;
-  left: 50%;
   background-color: rgba(0, 0, 0, .8);
   color: #fff;
   text-align: center;
   padding: 5px 10px;
   border-radius: 6px;
-  transform: translateX(-50%);
-  position: absolute;
-  z-index: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
   max-width: 50vw;
   white-space: pre;
 }

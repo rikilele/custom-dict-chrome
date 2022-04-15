@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case ADD_CONTEXT_MENU: {
         const { content } = message;
         content && chrome.contextMenus.create({
-          id: "customDictionaryContextMenu",
+          id: `customDictionaryContextMenu-${Math.floor(Math.random() * 0xffffffff) + 1}`,
           title: `Add "${content}" to custom dictionary`,
           contexts: ["all"],
         });
