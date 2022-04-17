@@ -1,8 +1,3 @@
-function updateCustomDictionaryView(dict) {
-  const textarea = document.getElementById("customDictionary");
-  textarea.value = JSON.stringify(dict, null, 2);
-}
-
 chrome.storage.sync.get("customDictionary", (result) => {
   updateCustomDictionaryView({ ...result.customDictionary });
 });
@@ -41,6 +36,13 @@ document.querySelector("form").addEventListener("submit", (e) => {
 
     return false;
 });
+
+// HELPERS
+
+function updateCustomDictionaryView(dict) {
+  const textarea = document.getElementById("customDictionary");
+  textarea.value = JSON.stringify(dict, null, 2);
+}
 
 function decorateButton(msg, className) {
   const button = document.getElementById("submitButton");
