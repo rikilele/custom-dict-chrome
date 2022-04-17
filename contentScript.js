@@ -44,16 +44,16 @@ window.addEventListener("load", () => {
 
 // HELPERS
 
-const IGNORED_TAGS = new Set(["SCRIPT", "STYLE"]);
+const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
 function scanAndHighlightText(text, tooltipText) {
   const queue = [document.body];
   let currNode;
   while (currNode = queue.pop()) {
     if (
-      !currNode.textContent.includes(text)
-      || IGNORED_TAGS.has(currNode.tagName)
+      IGNORED_TAGS.has(currNode.tagName)
       || currNode.classList.contains("custom-dictionary-highlighted")
       || currNode.classList.contains("custom-dictionary-tooltip")
+      || !currNode.textContent.includes(text)
     ) {
       continue;
     }
