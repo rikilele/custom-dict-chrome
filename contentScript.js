@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
   if (meaning) {
     chrome.storage.sync.get("customDictionary", (result) => {
-      const customDictionary = {...result.customDictionary};
+      const customDictionary = { ...result.customDictionary };
       customDictionary[selectionText] = meaning;
       chrome.storage.sync.set({ customDictionary });
     });
@@ -36,7 +36,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 window.addEventListener("load", () => {
   chrome.storage.sync.get("customDictionary", (result) => {
-    Object.entries({...result.customDictionary}).forEach(([key, value]) => {
+    Object.entries({ ...result.customDictionary }).forEach(([key, value]) => {
       scanAndHighlightText(key, value);
     });
   });
@@ -45,15 +45,19 @@ window.addEventListener("load", () => {
 // HELPERS
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE"]);
-
 function scanAndHighlightText(text, tooltipText) {
   const queue = [document.body];
   let currNode;
   while (currNode = queue.pop()) {
-    if (!currNode.textContent.includes(text)) continue;
-    if (IGNORED_TAGS.has(currNode.tagName)) continue;
-    if (currNode.classList.contains("custom-dictionary-tooltip")) continue;
-    if (currNode.classList.contains("custom-dictionary-tooltip-text")) continue;
+    if (
+      !currNode.textContent.includes(text)
+      || IGNORED_TAGS.has(currNode.tagName)
+      || currNode.classList.contains("custom-dictionary-tooltip")
+      || currNode.classList.contains("custom-dictionary-tooltip-text")
+    ) {
+      continue;
+    }
+
     currNode.childNodes.forEach((childNode) => {
       switch (childNode.nodeType) {
 
@@ -65,8 +69,8 @@ function scanAndHighlightText(text, tooltipText) {
         case Node.TEXT_NODE: {
           const paragraph = childNode.textContent;
           if (paragraph.includes(text)) {
-            const wrapperSpan = createTooltip(paragraph, text, tooltipText);
-            currNode.replaceChild(wrapperSpan, childNode);
+            const newChild = createTooltip(paragraph, text, tooltipText);
+            currNode.replaceChild(newChild, childNode);
           }
 
           break;
@@ -79,8 +83,8 @@ function scanAndHighlightText(text, tooltipText) {
 }
 
 function createTooltip(paragraph, word, tooltipText) {
-  const wrapperSpan = document.createElement("span");
-  paragraph.split(word).forEach((t, i) => {
+  const wrapper = document.createElement("span");
+  paragraph.split(word).forEach((filler, i) => {
     if (i !== 0) {
       const span = document.createElement("span");
       span.setAttribute("class", "custom-dictionary-tooltip");
@@ -88,8 +92,7 @@ function createTooltip(paragraph, word, tooltipText) {
       tooltip.setAttribute("class", "custom-dictionary-tooltip-text");
       tooltip.appendChild(document.createTextNode(tooltipText));
       span.appendChild(tooltip);
-      const textNode = document.createTextNode(word);
-      span.appendChild(textNode);
+      span.appendChild(document.createTextNode(word));
       span.addEventListener("mouseenter", () => {
         const { top, left, width } = span.getBoundingClientRect();
         tooltip.style.top = `${top}px`;
@@ -100,11 +103,11 @@ function createTooltip(paragraph, word, tooltipText) {
         `;
       });
 
-      wrapperSpan.appendChild(span);
+      wrapper.appendChild(span);
     }
 
-    wrapperSpan.appendChild(document.createTextNode(t));
+    wrapper.appendChild(document.createTextNode(filler));
   });
 
-  return wrapperSpan;
+  return wrapper;
 }
