@@ -24,28 +24,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const { selectionText } = request;
   const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
   if (meaning) {
-    chrome.storage.sync.get("customDictionary", (result) => {
-      const customDictionary = { ...result.customDictionary };
-      customDictionary[selectionText] = meaning;
-      chrome.storage.sync.set({ customDictionary });
-    });
-
-    scanAndHighlightText(selectionText, meaning);
+    chrome.storage.sync.set({ [selectionText]: meaning });
+    highlightTextsAndCreateTooltips(selectionText, meaning);
   }
 });
 
-window.addEventListener("load", () => {
-  chrome.storage.sync.get("customDictionary", (result) => {
-    Object.entries({ ...result.customDictionary }).forEach(([key, value]) => {
-      scanAndHighlightText(key, value);
-    });
+window.addEventListener("load", async () => {
+  const dict = await chrome.storage.sync.get(null);
+  Object.entries(dict).forEach(([text, tooltipText]) => {
+    highlightTextsAndCreateTooltips(text, tooltipText);
   });
 });
 
 // HELPERS
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
-function scanAndHighlightText(text, tooltipText) {
+function highlightTextsAndCreateTooltips(text, tooltipText) {
   const queue = [document.body];
   let currNode;
   while (currNode = queue.pop()) {

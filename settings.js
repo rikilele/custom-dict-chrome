@@ -1,19 +1,14 @@
-chrome.storage.sync.get("customDictionary", (result) => {
-  updateCustomDictionaryView({ ...result.customDictionary });
-});
+updateCustomDictionaryView();
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === "sync") {
-    Object.entries(changes).forEach(([key, { newValue }]) => {
-      if (key === "customDictionary") {
-        updateCustomDictionaryView({ ...newValue });
-      }
-    });
+    updateCustomDictionaryView();
   }
 });
 
-document.querySelector("form").addEventListener("submit", (e) => {
+document.getElementById("submitButton").addEventListener("click", async (e) => {
     e.preventDefault();
+
     let json;
     try {
       json = JSON.parse(document.getElementById("customDictionary").value);
@@ -24,32 +19,71 @@ document.querySelector("form").addEventListener("submit", (e) => {
     if (
       json === undefined
       || typeof json !== "object"
-      || !Object.values(json).every(val => typeof val === "string")
+      || json instanceof Array
+      || Object.values(json).some(val => typeof val !== "string")
     ) {
       decorateButton("Invalid JSON detected", "btn-danger");
       return;
     }
 
-    chrome.storage.sync.set({ customDictionary: json })
-      .then(() => decorateButton("Saved successfully", "btn-success"))
-      .catch(() => decorateButton("Not enough storage space", "btn-danger"));
+    try {
+      const keys = new Set(Object.keys(json));
+      const oldDict = await chrome.storage.sync.get(null);
+      const removedKeys = Object.keys(oldDict).filter(key => !keys.has(key));
+      await chrome.storage.sync.remove(removedKeys);
+      await chrome.storage.sync.set(json);
+      decorateButton("Saved successfully", "btn-success");
+    } catch (e) {
+      decorateButton("Something went wrong (check console)", "btn-danger");
+      console.error(e);
+    }
+});
 
-    return false;
+document.getElementById("clearButton").addEventListener("click", async (e) => {
+  e.preventDefault();
+  try {
+    await chrome.storage.sync.clear();
+  } catch (e) {
+    decorateButton("Something went wrong (check console)", "btn-danger");
+    console.error(e);
+  }
 });
 
 // HELPERS
 
-function updateCustomDictionaryView(dict) {
+async function updateCustomDictionaryView() {
+  const dict = await chrome.storage.sync.get(null);
   const textarea = document.getElementById("customDictionary");
   textarea.value = JSON.stringify(dict, null, 2);
+  setQuotaText(
+    document.getElementById("wordCount"),
+    Object.keys(dict).length,
+    512,
+  );
+
+  setQuotaText(
+    document.getElementById("byteCount"),
+    await chrome.storage.sync.getBytesInUse(null),
+    102400,
+  );
+}
+
+function setQuotaText(el, val, max) {
+  el.innerText = val;
+  const ratio = val / max;
+  el.className = (ratio < .5)
+    ? "bg-success text-light"
+    : (ratio < 1)
+      ? "bg-warning text-dark"
+      : "bg-danger text-light";
 }
 
 function decorateButton(msg, className) {
   const button = document.getElementById("submitButton");
-  button.value = msg;
+  button.innerText = msg;
   button.className = `btn ${className}`;
   setTimeout(() => {
-    button.value = "Save Custom Dictionary";
+    button.innerText = "Save Custom Dictionary";
     button.className = "btn btn-primary";
   }, 3000);
 }

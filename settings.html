@@ -7,18 +7,30 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   </head>
   <body style="width: 100vw; height: 100vh;">
-    <div class="mx-auto w-50" style="padding-top:4vh;height:88vh;">
+    <div class="mx-auto w-50" style="padding-top:4vh;height:92vh;">
       <form>
         <div class="form-group" style="margin-bottom:4vh">
           <label for="customDictionary" class="form-label" style="height:4vh">
             Edit the JSON directly ( <code>Record&lt;string, string&gt;</code> )
           </label>
-          <textarea class="form-control" id="customDictionary" style="height:70vh;"></textarea>
+          <textarea class="form-control" id="customDictionary" style="height:60vh;"></textarea>
         </div>
-        <div class="text-center" style="height:4vh;margin-bottom:4vh;">
-          <input id="submitButton" type="submit" value="Save Custom Dictionary" class="btn btn-primary">
+        <div class="text-center" style="height:6vh;">
+          <button id="submitButton" type="button" class="btn btn-primary">Save custom dictionary</button>
+          <button id="clearButton" type="button" class="btn btn-secondary" style="margin-left:1vw;">Clear all</button>
         </div>
       </form>
+      <div style="height:10vh;">
+        Quota:
+        <ul>
+          <li>
+            <span id="wordCount">n</span> / 512 words
+          </li>
+          <li>
+            <span id="byteCount">n</span> / 102400 bytes
+          </li>
+        </ul>
+      </div>
     </div>
     <footer style="
       position: fixed;
@@ -27,7 +39,7 @@
       width: 100%;
       text-align: center;
       height: 4vh;
-      margin-bottom: 2vh;
+      margin: 2vh 0;
     ">
       <a href="https://github.com/rikilele/custom-dict-chrome" target="_blank" rel="noopener noreferrer" style="color: #555;">
         Got issues? Raise them here
