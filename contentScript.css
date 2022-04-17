@@ -1,25 +1,23 @@
-.custom-dictionary-tooltip {
-  position: relative;
-  display: inline-block;
+.custom-dictionary-highlighted {
   background-color: rgba(255,215,0,.3);
 }
 
-.custom-dictionary-tooltip .custom-dictionary-tooltip-text {
+.custom-dictionary-tooltip {
   visibility: hidden;
   background-color: rgba(0, 0, 0, .8);
   color: #fff;
   text-align: center;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
   position: fixed;
   top: 0;
   left: 0;
   z-index: 99999;
-  max-width: 50vw;
-  white-space: pre;
+  max-width: 40vw;
+  white-space: pre-line;
 }
 
-.custom-dictionary-tooltip .custom-dictionary-tooltip-text::after {
+.custom-dictionary-tooltip::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -29,8 +27,4 @@
   border-style: solid;
   border-color: rgba(0, 0, 0, .8) transparent transparent transparent;
   transform: translateX(-50%);
-}
-
-.custom-dictionary-tooltip:hover .custom-dictionary-tooltip-text {
-  visibility: visible;
 }

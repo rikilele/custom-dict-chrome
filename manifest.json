@@ -11,7 +11,7 @@
     "default_title": "Custom Dictionary",
     "default_popup": "popup.html"
   },
-  "description": "A chrome extension to store words and their definitions",
+  "description": "Store words and their definitions",
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",

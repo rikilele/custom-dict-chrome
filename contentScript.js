@@ -52,8 +52,8 @@ function scanAndHighlightText(text, tooltipText) {
     if (
       !currNode.textContent.includes(text)
       || IGNORED_TAGS.has(currNode.tagName)
+      || currNode.classList.contains("custom-dictionary-highlighted")
       || currNode.classList.contains("custom-dictionary-tooltip")
-      || currNode.classList.contains("custom-dictionary-tooltip-text")
     ) {
       continue;
     }
@@ -67,9 +67,10 @@ function scanAndHighlightText(text, tooltipText) {
         }
 
         case Node.TEXT_NODE: {
-          const paragraph = childNode.textContent;
-          if (paragraph.includes(text)) {
-            const newChild = createTooltip(paragraph, text, tooltipText);
+          const passage = childNode.textContent;
+          if (passage.includes(text)) {
+            const tooltip = getTooltip(tooltipText);
+            const newChild = createHighlightedText(passage, text, tooltip);
             currNode.replaceChild(newChild, childNode);
           }
 
@@ -82,19 +83,30 @@ function scanAndHighlightText(text, tooltipText) {
   }
 }
 
-function createTooltip(paragraph, word, tooltipText) {
+const tooltips = new Map();
+function getTooltip(tooltipText) {
+  if (tooltips.has(tooltipText)) {
+    return tooltips.get(tooltipText);
+  }
+
+  const tooltip = document.createElement("div");
+  tooltip.setAttribute("class", "custom-dictionary-tooltip");
+  tooltip.appendChild(document.createTextNode(tooltipText));
+  document.body.appendChild(tooltip);
+  tooltips.set(tooltipText, tooltip);
+  return tooltip;
+}
+
+function createHighlightedText(passage, text, tooltip) {
   const wrapper = document.createElement("span");
-  paragraph.split(word).forEach((filler, i) => {
+  passage.split(text).forEach((str, i) => {
     if (i !== 0) {
-      const span = document.createElement("span");
-      span.setAttribute("class", "custom-dictionary-tooltip");
-      const tooltip = document.createElement("span");
-      tooltip.setAttribute("class", "custom-dictionary-tooltip-text");
-      tooltip.appendChild(document.createTextNode(tooltipText));
-      span.appendChild(tooltip);
-      span.appendChild(document.createTextNode(word));
-      span.addEventListener("mouseenter", () => {
-        const { top, left, width } = span.getBoundingClientRect();
+      const highlight = document.createElement("span");
+      highlight.setAttribute("class", "custom-dictionary-highlighted");
+      highlight.appendChild(document.createTextNode(text));
+      highlight.addEventListener("mouseenter", () => {
+        const { top, left, width } = highlight.getBoundingClientRect();
+        tooltip.style.visibility = "visible";
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${left}px`;
         tooltip.style.transform = `
@@ -103,10 +115,14 @@ function createTooltip(paragraph, word, tooltipText) {
         `;
       });
 
-      wrapper.appendChild(span);
+      highlight.addEventListener("mouseleave", () => {
+        tooltip.style.visibility = "hidden";
+      });
+
+      wrapper.appendChild(highlight);
     }
 
-    wrapper.appendChild(document.createTextNode(filler));
+    wrapper.appendChild(document.createTextNode(str));
   });
 
   return wrapper;
