@@ -1,6 +1,6 @@
 # Custom Dictionary 📕
 
-A chrome extension that allows you to define your own definition of words, and displays them as popups on web pages.
+A chrome extension that allows you to register your own definitions of words, and display them as popups on web pages.
 
 ## Add to Chrome
 
