@@ -35,8 +35,10 @@ document.querySelector("form").addEventListener("submit", (e) => {
       return;
     }
 
-    chrome.storage.sync.set({ customDictionary: json });
-    decorateButton("Saved successfully", "btn-success");
+    chrome.storage.sync.set({ customDictionary: json })
+      .then(() => decorateButton("Saved successfully", "btn-success"))
+      .catch(() => decorateButton("Not enough storage space", "btn-danger"));
+
     return false;
 });
 
