@@ -1,4 +1,16 @@
-# custom-dict-chrome
+# Custom Dictionary 📕
+
+A chrome extension that allows you to define your own definition of words, and displays them as popups on web pages.
+
+## Add to Chrome
+
+> Not available on the Chrome Web Store yet
+
+1. `git clone`
+1. Manage Extensions
+1. Load unpacked
+
+## Usage
 
 Highlight the text you want to register
 
