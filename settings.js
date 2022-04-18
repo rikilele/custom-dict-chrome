@@ -1,11 +1,11 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
-updateCustomDictionaryView();
+document.addEventListener("load", () => {
+  updateCustomDictionaryView();
+});
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === "sync") {
-    updateCustomDictionaryView();
-  }
+  (namespace === "sync") && updateCustomDictionaryView();
 });
 
 document.getElementById("submitButton").addEventListener("click", async (e) => {
@@ -51,7 +51,9 @@ document.getElementById("clearButton").addEventListener("click", async (e) => {
   }
 });
 
-// HELPERS
+/***********
+ * HELPERS *
+ ***********/
 
 async function updateCustomDictionaryView() {
   const dict = await chrome.storage.sync.get(null);

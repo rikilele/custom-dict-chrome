@@ -1,44 +1,44 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
-// Shared with background.js
-const SCRIPT_NAME = "customDictionaryContentScript";
-const REMOVE_CONTEXT_MENU = "customDictionaryRemoveContextMenu";
-const ADD_CONTEXT_MENU = "customDictionaryAddContextMenu";
-
-document.addEventListener("selectionchange", () => {
-  chrome.runtime.sendMessage({
-    from: SCRIPT_NAME,
-    title: REMOVE_CONTEXT_MENU,
-  });
-
-  const selectedText = document.getSelection().toString();
-  if (selectedText !== "") {
-    chrome.runtime.sendMessage({
-      from: SCRIPT_NAME,
-      title: ADD_CONTEXT_MENU,
-      content: selectedText,
-    });
-  }
+/**
+ * Update page on initial load.
+ */
+window.addEventListener("load", () => {
+  updatePageView();
 });
 
+/**
+ * Update page whenever a change is made on chrome.storage.sync
+ */
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  (namespace === "sync") && updatePageView();
+});
+
+/**
+ * Catches context menu click events from background.js
+ * Prompts the user to input the meaning of the selected text,
+ * and stores it into chrome.storage.sync.
+ */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   sendResponse(); // necessary for async purposes
   const { selectionText } = request;
   const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
-  if (meaning) {
-    chrome.storage.sync.set({ [selectionText]: meaning });
-    highlightTextsAndCreateTooltips(selectionText, meaning);
-  }
+  meaning && chrome.storage.sync.set({ [selectionText]: meaning });
 });
 
-window.addEventListener("load", async () => {
+/***********
+ * HELPERS *
+ ***********/
+
+/**
+ * Scans the document and adds tooltips to words that are stored in the dict.
+ */
+async function updatePageView() {
   const dict = await chrome.storage.sync.get(null);
   Object.entries(dict).forEach(([text, tooltipText]) => {
     highlightTextsAndCreateTooltips(text, tooltipText);
   });
-});
-
-// HELPERS
+}
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
 function highlightTextsAndCreateTooltips(text, tooltipText) {
@@ -79,17 +79,17 @@ function highlightTextsAndCreateTooltips(text, tooltipText) {
   }
 }
 
-const tooltips = new Map();
+const TOOLTIPS = new Map();
 function getTooltip(tooltipText) {
-  if (tooltips.has(tooltipText)) {
-    return tooltips.get(tooltipText);
+  if (TOOLTIPS.has(tooltipText)) {
+    return TOOLTIPS.get(tooltipText);
   }
 
   const tooltip = document.createElement("div");
   tooltip.setAttribute("class", "custom-dictionary-tooltip");
   tooltip.appendChild(document.createTextNode(tooltipText));
   document.body.appendChild(tooltip);
-  tooltips.set(tooltipText, tooltip);
+  TOOLTIPS.set(tooltipText, tooltip);
   return tooltip;
 }
 
@@ -97,11 +97,11 @@ function createHighlightedText(passage, text, tooltip) {
   const wrapper = document.createElement("span");
   passage.split(text).forEach((str, i) => {
     if (i !== 0) {
-      const highlight = document.createElement("span");
-      highlight.setAttribute("class", "custom-dictionary-highlighted");
-      highlight.appendChild(document.createTextNode(text));
-      highlight.addEventListener("mouseenter", () => {
-        const { top, left, width } = highlight.getBoundingClientRect();
+      const highlightedText = document.createElement("span");
+      highlightedText.setAttribute("class", "custom-dictionary-highlighted");
+      highlightedText.appendChild(document.createTextNode(text));
+      highlightedText.addEventListener("mouseenter", () => {
+        const { top, left, width } = highlightedText.getBoundingClientRect();
         tooltip.style.visibility = "visible";
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${left}px`;
@@ -111,11 +111,11 @@ function createHighlightedText(passage, text, tooltip) {
         `;
       });
 
-      highlight.addEventListener("mouseleave", () => {
+      highlightedText.addEventListener("mouseleave", () => {
         tooltip.style.visibility = "hidden";
       });
 
-      wrapper.appendChild(highlight);
+      wrapper.appendChild(highlightedText);
     }
 
     wrapper.appendChild(document.createTextNode(str));
