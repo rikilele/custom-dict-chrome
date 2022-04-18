@@ -84,8 +84,12 @@ function highlightTextsAndCreateTooltips(text, tooltipText, node) {
           const passage = childNode.textContent;
           if (passage.includes(text)) {
             const tooltip = getTooltip(tooltipText);
-            const newChild = createHighlightedText(passage, text, tooltip);
-            currNode.replaceChild(newChild, childNode);
+            const newChildren = createHighlightedPassage(passage, text, tooltip);
+            newChildren.forEach((newChild) => {
+              currNode.insertBefore(newChild, childNode)
+            });
+
+            currNode.removeChild(childNode);
           }
 
           break;
@@ -116,11 +120,12 @@ function getTooltip(tooltipText) {
 }
 
 /**
+ * Returns an array of html element nodes.
  * Highlights the text occurrences inside the passage.
  * Adds event listeners to move the tooltip on hover.
  */
-function createHighlightedText(passage, text, tooltip) {
-  const wrapper = document.createElement("span");
+function createHighlightedPassage(passage, text, tooltip) {
+  const result = [];
   passage.split(text).forEach((str, i) => {
     if (i !== 0) {
       const highlightedText = document.createElement("span");
@@ -141,11 +146,11 @@ function createHighlightedText(passage, text, tooltip) {
         tooltip.style.visibility = "hidden";
       });
 
-      wrapper.appendChild(highlightedText);
+      result.push(highlightedText);
     }
 
-    wrapper.appendChild(document.createTextNode(str));
+    result.push(document.createTextNode(str));
   });
 
-  return wrapper;
+  return result;
 }
