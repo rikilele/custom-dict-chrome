@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
-document.addEventListener("load", () => {
+window.addEventListener("load", () => {
   updateCustomDictionaryView();
 });
 
