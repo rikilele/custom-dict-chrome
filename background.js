@@ -6,7 +6,7 @@ const REMOVE_CONTEXT_MENU = "customDictionaryRemoveContextMenu";
 const ADD_CONTEXT_MENU = "customDictionaryAddContextMenu";
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  sendResponse(); // for async purposes
+  sendResponse(); // necessary for async purposes
   if (message.from === SCRIPT_NAME) {
     switch (message.title) {
       case REMOVE_CONTEXT_MENU: {

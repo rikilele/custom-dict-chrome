@@ -22,7 +22,7 @@ document.addEventListener("selectionchange", () => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  sendResponse(); // for async purposes
+  sendResponse(); // necessary for async purposes
   const { selectionText } = request;
   const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
   if (meaning) {

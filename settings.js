@@ -71,7 +71,7 @@ async function updateCustomDictionaryView() {
 }
 
 function setQuotaText(el, val, max) {
-  el.innerText = val;
+  el.textContent = val;
   const ratio = val / max;
   el.className = (ratio < .5)
     ? "bg-success text-light"
@@ -82,10 +82,10 @@ function setQuotaText(el, val, max) {
 
 function decorateButton(msg, className) {
   const button = document.getElementById("submitButton");
-  button.innerText = msg;
+  button.textContent = msg;
   button.className = `btn ${className}`;
   setTimeout(() => {
-    button.innerText = "Save Custom Dictionary";
+    button.textContent = "Save Custom Dictionary";
     button.className = "btn btn-primary";
   }, 3000);
 }
