@@ -1,17 +1,36 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
 /**
- * Update page on initial load.
+ * Store client-side cache for custom dictionary.
  */
-window.addEventListener("load", () => {
-  updatePageView();
+let DICT;
+
+/**
+ * An observer to react to DOM changes.
+ * Updates the affected nodes for highlighting.
+ */
+const OBSERVER = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    (mutation.addedNodes.length > 0) && updateNode(mutation.target);
+  });
+});
+
+/**
+ * Scans and highlights the entire document on load,
+ * amd activates the DOM observer.
+ */
+window.addEventListener("load", async () => {
+  DICT = await chrome.storage.sync.get(null);
+  updateNode(document.body);
+  OBSERVER.observe(document.body, { childList: true, subtree: true });
 });
 
 /**
  * Update page whenever a change is made on chrome.storage.sync
  */
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  (namespace === "sync") && updatePageView();
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+  DICT = await chrome.storage.sync.get(null);
+  (namespace === "sync") && updateNode(document.body);
 });
 
 /**
@@ -31,18 +50,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  ***********/
 
 /**
- * Scans the document and adds tooltips to words that are stored in the dict.
+ * Scans the node and adds tooltips to words that are stored in DICT.
  */
-async function updatePageView() {
-  const dict = await chrome.storage.sync.get(null);
-  Object.entries(dict).forEach(([text, tooltipText]) => {
-    highlightTextsAndCreateTooltips(text, tooltipText);
+function updateNode(node) {
+  Object.entries(DICT).forEach(([text, tooltipText]) => {
+    highlightTextsAndCreateTooltips(text, tooltipText, node);
   });
 }
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
-function highlightTextsAndCreateTooltips(text, tooltipText) {
-  const queue = [document.body];
+function highlightTextsAndCreateTooltips(text, tooltipText, node) {
+  const queue = [node];
   let currNode;
   while (currNode = queue.pop()) {
     if (
@@ -79,6 +97,10 @@ function highlightTextsAndCreateTooltips(text, tooltipText) {
   }
 }
 
+/**
+ * Only a single tooltip element is created for each tooltip text.
+ * That tooltip text will later be moved around the screen.
+ */
 const TOOLTIPS = new Map();
 function getTooltip(tooltipText) {
   if (TOOLTIPS.has(tooltipText)) {
@@ -93,6 +115,10 @@ function getTooltip(tooltipText) {
   return tooltip;
 }
 
+/**
+ * Highlights the text occurrences inside the passage.
+ * Adds event listeners to move the tooltip on hover.
+ */
 function createHighlightedText(passage, text, tooltip) {
   const wrapper = document.createElement("span");
   passage.split(text).forEach((str, i) => {
@@ -122,29 +148,4 @@ function createHighlightedText(passage, text, tooltip) {
   });
 
   return wrapper;
-}
-
-/********************
- * Throttle Wrapper *
- ********************/
-
-function throttle (func, limit) {
-  let lastFunc;
-  let lastRan;
-  return () => {
-    const context = this;
-    const args = arguments;
-    if (!lastRan) {
-      func.apply(context, args)
-      lastRan = Date.now();
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(() => {
-          if ((Date.now() - lastRan) >= limit) {
-            func.apply(context, args);
-            lastRan = Date.now();
-          }
-      }, limit - (Date.now() - lastRan));
-    }
-  }
 }
