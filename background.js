@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
 chrome.contextMenus.create({
-  id: "customDictionary",
+  id: `customDictionary-${Math.random().toString().substring(2)}`,
   title: "Add \"%s\" to custom dictionary",
   contexts: ["selection"],
 });
