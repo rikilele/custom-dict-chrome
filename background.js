@@ -1,3 +1,5 @@
+// Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
+
 // Messages
 const SCRIPT_NAME = "customDictionaryContentScript";
 const REMOVE_CONTEXT_MENU = "customDictionaryRemoveContextMenu";

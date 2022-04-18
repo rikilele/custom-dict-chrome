@@ -1,3 +1,5 @@
+// Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
+
 updateCustomDictionaryView();
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
