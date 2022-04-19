@@ -6,14 +6,18 @@
 let DICT;
 
 /**
- * An observer to react to DOM changes.
- * Updates the affected nodes for highlighting.
+ * Re-scans the document body on DOM changes.
  * Starts observing after initial page load.
+ * Debounce-enabled --- the update only runs after a 1 second steady state.
  */
-const OBSERVER = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    (mutation.addedNodes.length > 0) && updateNode(mutation.target);
-  });
+let TIMEOUT;
+const OBSERVER = new MutationObserver(() => {
+  clearTimeout(TIMEOUT);
+  TIMEOUT = setTimeout(() => {
+    OBSERVER.disconnect();
+    updateNode(document.body);
+    OBSERVER.observe(document.body, { childList: true, subtree: true });
+  }, 1000);
 });
 
 /**
@@ -54,13 +58,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  * Scans the node and adds tooltips to words that are stored in DICT.
  */
 function updateNode(node) {
-  Object.entries(DICT).forEach(([text, tooltipText]) => {
-    highlightTextsAndCreateTooltips(text, tooltipText, node);
+  console.time("custom dict applied in");
+
+  Object.keys(DICT).forEach((text) => {
+    highlightTextsAndCreateTooltips(text, node);
   });
+
+  console.timeEnd("custom dict applied in");
 }
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
-function highlightTextsAndCreateTooltips(text, tooltipText, node) {
+function highlightTextsAndCreateTooltips(text, node) {
   const queue = [node];
   let currNode;
   while (currNode = queue.pop()) {
@@ -84,13 +92,8 @@ function highlightTextsAndCreateTooltips(text, tooltipText, node) {
         case Node.TEXT_NODE: {
           const passage = childNode.textContent;
           if (passage.includes(text)) {
-            const tooltip = getTooltip(tooltipText);
-            const newNodes = createHighlightedPassage(passage, text, tooltip);
-            newNodes.forEach((newNode) => {
-              currNode.insertBefore(newNode, childNode)
-            });
-
-            currNode.removeChild(childNode);
+            const newNode = createHighlightedPassage(passage, text);
+            currNode.replaceChild(newNode, childNode);
           }
 
           break;
@@ -107,38 +110,40 @@ function highlightTextsAndCreateTooltips(text, tooltipText, node) {
  * That tooltip text will later be moved around the screen.
  */
 const TOOLTIPS = new Map();
-function getTooltip(tooltipText) {
-  if (TOOLTIPS.has(tooltipText)) {
-    return TOOLTIPS.get(tooltipText);
+function getTooltip(text) {
+  if (TOOLTIPS.has(text)) {
+    return TOOLTIPS.get(text);
   }
 
+  const tooltipText = DICT[text];
   const tooltip = document.createElement("div");
   tooltip.setAttribute("class", "custom-dictionary-tooltip");
   tooltip.appendChild(document.createTextNode(tooltipText));
   document.body.appendChild(tooltip);
-  TOOLTIPS.set(tooltipText, tooltip);
+  TOOLTIPS.set(text, tooltip);
   return tooltip;
 }
 
 /**
- * Returns an array of html element nodes.
+ * Returns a document fragment of html element nodes.
  * Highlights the text occurrences inside the passage.
  * Adds event listeners to move the tooltip on hover.
  */
-function createHighlightedPassage(passage, text, tooltip) {
-  return passage
-    .split(text)
-    .reduce((result, str, i) => {
-      (i !== 0) && result.push(createHighlightedText(text, tooltip));
-      result.push(document.createTextNode(str));
-      return result;
-    }, []);
+function createHighlightedPassage(passage, text) {
+  const fragment = new DocumentFragment();
+  passage.split(text).forEach((str, i) => {
+    (i !== 0) && fragment.appendChild(createHighlightedText(text));
+    fragment.appendChild(document.createTextNode(str));
+  });
+
+  return fragment;
 }
 
 /**
  * Creates a highlighted text that shows a tooltip on hover.
  */
-function createHighlightedText(text, tooltip) {
+function createHighlightedText(text) {
+  const tooltip = getTooltip(text);
   const highlightedText = document.createElement("span");
   highlightedText.setAttribute("class", "custom-dictionary-highlighted");
   highlightedText.appendChild(document.createTextNode(text));
