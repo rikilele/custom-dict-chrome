@@ -8,6 +8,7 @@ let DICT;
 /**
  * An observer to react to DOM changes.
  * Updates the affected nodes for highlighting.
+ * Starts observing after initial page load.
  */
 const OBSERVER = new MutationObserver((mutations) => {
   mutations.forEach((mutation) => {
@@ -84,9 +85,9 @@ function highlightTextsAndCreateTooltips(text, tooltipText, node) {
           const passage = childNode.textContent;
           if (passage.includes(text)) {
             const tooltip = getTooltip(tooltipText);
-            const newChildren = createHighlightedPassage(passage, text, tooltip);
-            newChildren.forEach((newChild) => {
-              currNode.insertBefore(newChild, childNode)
+            const newNodes = createHighlightedPassage(passage, text, tooltip);
+            newNodes.forEach((newNode) => {
+              currNode.insertBefore(newNode, childNode)
             });
 
             currNode.removeChild(childNode);
@@ -125,32 +126,36 @@ function getTooltip(tooltipText) {
  * Adds event listeners to move the tooltip on hover.
  */
 function createHighlightedPassage(passage, text, tooltip) {
-  const result = [];
-  passage.split(text).forEach((str, i) => {
-    if (i !== 0) {
-      const highlightedText = document.createElement("span");
-      highlightedText.setAttribute("class", "custom-dictionary-highlighted");
-      highlightedText.appendChild(document.createTextNode(text));
-      highlightedText.addEventListener("mouseenter", () => {
-        const { top, left, width } = highlightedText.getBoundingClientRect();
-        tooltip.style.visibility = "visible";
-        tooltip.style.top = `${top}px`;
-        tooltip.style.left = `${left}px`;
-        tooltip.style.transform = `
-          translateY(-128%)
-          translateX(calc(-48% + ${width / 2}px))
-        `;
-      });
+  return passage
+    .split(text)
+    .reduce((result, str, i) => {
+      (i !== 0) && result.push(createHighlightedText(text, tooltip));
+      result.push(document.createTextNode(str));
+      return result;
+    }, []);
+}
 
-      highlightedText.addEventListener("mouseleave", () => {
-        tooltip.style.visibility = "hidden";
-      });
-
-      result.push(highlightedText);
-    }
-
-    result.push(document.createTextNode(str));
+/**
+ * Creates a highlighted text that shows a tooltip on hover.
+ */
+function createHighlightedText(text, tooltip) {
+  const highlightedText = document.createElement("span");
+  highlightedText.setAttribute("class", "custom-dictionary-highlighted");
+  highlightedText.appendChild(document.createTextNode(text));
+  highlightedText.addEventListener("mouseenter", () => {
+    const { top, left, width } = highlightedText.getBoundingClientRect();
+    tooltip.style.visibility = "visible";
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.transform = `
+      translateY(-128%)
+      translateX(calc(-48% + ${width / 2}px))
+    `;
   });
 
-  return result;
+  highlightedText.addEventListener("mouseleave", () => {
+    tooltip.style.visibility = "hidden";
+  });
+
+  return highlightedText;
 }
