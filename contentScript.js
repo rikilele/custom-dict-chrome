@@ -69,13 +69,18 @@ function updateNode(node) {
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
 function highlightTextsAndCreateTooltips(text, node) {
-  const queue = [node];
+  const queue = [...node.childNodes];
   let currNode;
   while (currNode = queue.pop()) {
+    if (currNode.nodeType === Node.TEXT_NODE) {
+      handleTextNode(currNode, text);
+      continue;
+    }
+
     if (
       IGNORED_TAGS.has(currNode.tagName)
-      || currNode.classList.contains("custom-dictionary-highlighted")
-      || currNode.classList.contains("custom-dictionary-tooltip")
+      || currNode.classList?.contains("custom-dictionary-highlighted")
+      || currNode.classList?.contains("custom-dictionary-tooltip")
       || !currNode.textContent.includes(text)
     ) {
       continue;
@@ -90,12 +95,7 @@ function highlightTextsAndCreateTooltips(text, node) {
         }
 
         case Node.TEXT_NODE: {
-          const passage = childNode.textContent;
-          if (passage.includes(text)) {
-            const newNode = createHighlightedPassage(passage, text);
-            currNode.replaceChild(newNode, childNode);
-          }
-
+          handleTextNode(childNode, text);
           break;
         }
 
@@ -106,22 +106,16 @@ function highlightTextsAndCreateTooltips(text, node) {
 }
 
 /**
- * Only a single tooltip element is created for each tooltip text.
- * That tooltip text will later be moved around the screen.
+ * Checks if the text node contains the targetText.
+ * If so, replaces itself with a new node that has its targetTexts highlighted.
+ * The highlighted texts will show a tooltip when hovered over.
  */
-const TOOLTIPS = new Map();
-function getTooltip(text) {
-  if (TOOLTIPS.has(text)) {
-    return TOOLTIPS.get(text);
+function handleTextNode(textNode, targetText) {
+  const passage = textNode.textContent;
+  if (passage.includes(targetText)) {
+    const newNode = createHighlightedPassage(passage, targetText);
+    textNode.parentNode.replaceChild(newNode, textNode);
   }
-
-  const tooltipText = DICT[text];
-  const tooltip = document.createElement("div");
-  tooltip.setAttribute("class", "custom-dictionary-tooltip");
-  tooltip.appendChild(document.createTextNode(tooltipText));
-  document.body.appendChild(tooltip);
-  TOOLTIPS.set(text, tooltip);
-  return tooltip;
 }
 
 /**
@@ -163,4 +157,23 @@ function createHighlightedText(text) {
   });
 
   return highlightedText;
+}
+
+/**
+ * Only a single tooltip element is created for each tooltip text.
+ * That tooltip text will later be moved around the screen.
+ */
+const TOOLTIPS = new Map();
+function getTooltip(text) {
+  if (TOOLTIPS.has(text)) {
+    return TOOLTIPS.get(text);
+  }
+
+  const tooltipText = DICT[text];
+  const tooltip = document.createElement("div");
+  tooltip.setAttribute("class", "custom-dictionary-tooltip");
+  tooltip.appendChild(document.createTextNode(tooltipText));
+  document.body.appendChild(tooltip);
+  TOOLTIPS.set(text, tooltip);
+  return tooltip;
 }
