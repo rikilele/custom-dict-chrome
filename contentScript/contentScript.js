@@ -100,7 +100,10 @@ function updateNode(node) {
   });
 }
 
-const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
+const IGNORED_TAGS = new Set([
+  "SCRIPT", "STYLE", "NOSCRIPT",
+  "IMG", "VIDEO", "AUDIO", "CANVAS", "SVG", "MAP", "OBJECT",
+]);
 function highlightTextsAndCreateTooltips(text, node) {
   const queue = [...node.childNodes];
   let currNode;
