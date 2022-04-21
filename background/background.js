@@ -69,7 +69,7 @@ chrome.contextMenus.onClicked.addListener(async (e, tab) => {
 
 async function updateContextMenu() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab.url) {
+  if (tab?.url) {
     const { hostname } = new URL(tab.url);
     const { allowlist } = await chrome.storage.sync.get({ allowlist: [] });
     const isEnabled = allowlist.includes(hostname);
