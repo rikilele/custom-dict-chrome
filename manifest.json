@@ -9,9 +9,9 @@
       "128": "icons/128.png"
     },
     "default_title": "Custom Dictionary",
-    "default_popup": "popup.html"
+    "default_popup": "popup/popup.html"
   },
-  "description": "Store words and their definitions",
+  "description": "Store words and their definitions, and highlight them on websites",
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",
@@ -19,19 +19,19 @@
   },
   "author": "Riki Singh Khorana",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background/background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["contentScript.js"],
-      "css": ["contentScript.css"],
+      "js": ["contentScript/contentScript.js"],
+      "css": ["contentScript/contentScript.css"],
       "match_about_blank": true
     }
   ],
   "minimum_chrome_version": "11.0",
   "offline_enabled": true,
-  "options_page": "settings.html",
+  "options_page": "settings/settings.html",
   "permissions": [
     "storage",
     "contextMenus",
