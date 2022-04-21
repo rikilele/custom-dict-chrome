@@ -112,8 +112,9 @@ function highlightTextsAndCreateTooltips(text, node) {
 
     if (
       IGNORED_TAGS.has(currNode.tagName)
-      || currNode.classList?.contains("custom-dictionary-highlighted")
-      || currNode.classList?.contains("custom-dictionary-tooltip")
+      || currNode.nodeType !== Node.ELEMENT_NODE
+      || currNode.classList.contains("custom-dictionary-highlighted")
+      || currNode.classList.contains("custom-dictionary-tooltip")
       || !currNode.textContent.includes(text)
     ) {
       continue;
