@@ -1,0 +1,59 @@
+body {
+  width: 100vw;
+  height: 100vh;
+}
+
+a {
+  color: #555;
+}
+
+a:hover {
+  color: #888;
+}
+
+.main {
+  height: 92vh;
+  padding: 4vh 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4vh;
+}
+
+.form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+.userInput {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.textarea {
+  height: 100%;
+}
+
+.quota {
+  text-align: right;
+}
+
+.buttons {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  gap: 1vw;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 8vh;
+}

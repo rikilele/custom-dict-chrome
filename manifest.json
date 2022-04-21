@@ -34,7 +34,8 @@
   "options_page": "settings.html",
   "permissions": [
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "tabs"
   ],
   "short_name": "Custom Dict"
 }

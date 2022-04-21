@@ -1,9 +1,34 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
+/****************
+ * CONTEXT MENU *
+ ****************/
+
+/**
+ * Catches context menu click events from background.js
+ * Prompts the user to input the meaning of the selected text,
+ * and stores it into chrome.storage.local.
+ */
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  sendResponse();
+  const { selectionText } = request;
+  const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
+  meaning && chrome.storage.local.set({ [selectionText]: meaning });
+});
+
+/*********************
+ * PAGE MANIPULATION *
+ *********************/
+
 /**
  * Store client-side cache for custom dictionary.
  */
-let DICT;
+let DICT = {};
+
+/**
+ * Store client-side cache for whether this extension is enabled or not.
+ */
+let ENABLED = false;
 
 /**
  * Re-scans the document body on DOM changes.
@@ -11,60 +36,68 @@ let DICT;
  * Debounce-enabled --- the update only runs after a 1 second steady state.
  */
 let TIMEOUT;
+const OBSERVE_OPTIONS = { childList: true, subtree: true };
 const OBSERVER = new MutationObserver(() => {
   clearTimeout(TIMEOUT);
   TIMEOUT = setTimeout(() => {
     OBSERVER.disconnect();
     updateNode(document.body);
-    OBSERVER.observe(document.body, { childList: true, subtree: true });
+    OBSERVER.observe(document.body, OBSERVE_OPTIONS);
   }, 1000);
 });
 
 /**
- * Scans and highlights the entire document on load,
- * amd activates the DOM observer.
+ * If enabled, scans and highlights on load and activates the DOM observer.
  */
 window.addEventListener("load", async () => {
-  DICT = await chrome.storage.sync.get(null);
-  updateNode(document.body);
-  OBSERVER.observe(document.body, { childList: true, subtree: true });
+  updateEnabledStatus();
 });
 
 /**
- * Update page whenever a change is made on chrome.storage.sync
+ * Listen to changes to chrome storage, and act accordingly.
  */
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
-  DICT = await chrome.storage.sync.get(null);
-  (namespace === "sync") && updateNode(document.body);
-});
+  if (namespace === "sync") {
+    updateEnabledStatus();
+  }
 
-/**
- * Catches context menu click events from background.js
- * Prompts the user to input the meaning of the selected text,
- * and stores it into chrome.storage.sync.
- */
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  sendResponse(); // necessary for async purposes
-  const { selectionText } = request;
-  const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
-  meaning && chrome.storage.sync.set({ [selectionText]: meaning });
+  if (ENABLED && namespace === "local") {
+    DICT = await chrome.storage.local.get(null);
+    updateNode(document.body);
+  }
 });
 
 /***********
  * HELPERS *
  ***********/
 
+async function updateEnabledStatus() {
+  const wasEnabled = ENABLED;
+  const { hostname } = new URL(document.URL);
+  const { allowlist } = await chrome.storage.sync.get({ allowlist: [] })
+  ENABLED = allowlist.includes(hostname);
+  if (wasEnabled && !ENABLED) {
+    clearTimeout(TIMEOUT);
+    OBSERVER.disconnect();
+    return;
+  }
+
+  if (!wasEnabled && ENABLED) {
+    DICT = await chrome.storage.local.get(null);
+    updateNode(document.body);
+    OBSERVER.observe(document.body, OBSERVE_OPTIONS);
+  }
+}
+
 /**
  * Scans the node and adds tooltips to words that are stored in DICT.
  */
 function updateNode(node) {
-  console.time("custom dict applied in");
-
   Object.keys(DICT).forEach((text) => {
+    console.time(text);
     highlightTextsAndCreateTooltips(text, node);
+    console.timeEnd(text);
   });
-
-  console.timeEnd("custom dict applied in");
 }
 
 const IGNORED_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT"]);
