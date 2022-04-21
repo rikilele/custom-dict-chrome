@@ -131,7 +131,6 @@ async function updateAllowlistView() {
   const { allowlist } = await chrome.storage.sync.get({ allowlist: []});
   const textarea = document.getElementById("allowlist");
   textarea.value = JSON.stringify(allowlist, null, 2);
-  console.log(allowlist);
   setQuotaText(
     document.getElementById("allowlistQuota"),
     await chrome.storage.sync.getBytesInUse("allowlist"),
