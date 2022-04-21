@@ -93,11 +93,13 @@ async function updateEnabledStatus() {
  * Scans the node and adds tooltips to words that are stored in DICT.
  */
 function updateNode(node) {
+  console.time("custom dictionary scanned in");
+
   Object.keys(DICT).forEach((text) => {
-    console.time(text);
     highlightTextsAndCreateTooltips(text, node);
-    console.timeEnd(text);
   });
+
+  console.timeEnd("custom dictionary scanned in");
 }
 
 const IGNORED_TAGS = new Set([
