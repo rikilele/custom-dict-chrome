@@ -85,7 +85,7 @@ document.getElementById("submitAllowlist").addEventListener("click", async (e) =
     || !(array instanceof Array)
     || array.some(val => typeof val !== "string")
   ) {
-    decorateButton("Invalid array detected", "btn-danger");
+    decorateButton("submitAllowlist", "Invalid array detected", "btn-danger");
     return;
   }
 
