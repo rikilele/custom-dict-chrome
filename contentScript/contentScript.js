@@ -79,6 +79,12 @@ async function updateEnabledStatus() {
   if (wasEnabled && !ENABLED) {
     clearTimeout(TIMEOUT);
     OBSERVER.disconnect();
+    HIGHLIGHTED_TEXTS.forEach((el) => {
+      const textNode = document.createTextNode(el.textContent);
+      el.parentNode.replaceChild(textNode, el);
+    });
+
+    HIGHLIGHTED_TEXTS.length = 0;
     return;
   }
 
@@ -197,6 +203,7 @@ HIGHLIGHTED_TEXT_PROTO.setAttribute("class", "custom-dictionary-highlighted");
 /**
  * Creates a highlighted text that shows a tooltip on hover.
  */
+const HIGHLIGHTED_TEXTS = [];
 function createHighlightedText(text) {
   const tooltip = getTooltip(text);
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
@@ -215,6 +222,7 @@ function createHighlightedText(text) {
     tooltip.style.visibility = "hidden";
   });
 
+  HIGHLIGHTED_TEXTS.push(highlightedText);
   return highlightedText;
 }
 
