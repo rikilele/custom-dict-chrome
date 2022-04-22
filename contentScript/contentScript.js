@@ -215,6 +215,7 @@ function createHighlightedPassage(passage, text) {
  */
 const HIGHLIGHTED_TEXT_PROTO = document.createElement("span");
 HIGHLIGHTED_TEXT_PROTO.setAttribute("class", "custom-dictionary-highlighted");
+HIGHLIGHTED_TEXT_PROTO.style.all = "unset"; // ignores css for <span>
 
 /**
  * Creates a highlighted text that shows a tooltip on hover.
