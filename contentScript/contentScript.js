@@ -102,10 +102,25 @@ function updateNode(node) {
   console.timeEnd("custom dictionary scanned in");
 }
 
+/**
+ * Inspired by:
+ * https://github.com/padolsey/findAndReplaceDOMText/blob/master/src/findAndReplaceDOMText.js#L106-L112
+ */
 const IGNORED_TAGS = new Set([
+  // Source elements
   "SCRIPT", "STYLE", "NOSCRIPT",
+  // Media elements
   "IMG", "VIDEO", "AUDIO", "CANVAS", "SVG", "MAP", "OBJECT",
+  // Input elements
+  "INPUT", "SELECT", "OPTION", "OPTGROUP",
+  // Special elements
+  "IFRAME",
 ]);
+
+/**
+ * Looks for `text` in a given `node`, and highlights all occurrence of it.
+ * When a user hovers over the text, a tooltip with the definition shows up.
+ */
 function highlightTextsAndCreateTooltips(text, node) {
   const queue = [...node.childNodes];
   let currNode;
