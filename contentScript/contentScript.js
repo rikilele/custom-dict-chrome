@@ -41,7 +41,7 @@ const OBSERVER = new MutationObserver(() => {
   clearTimeout(TIMEOUT);
   TIMEOUT = setTimeout(() => {
     OBSERVER.disconnect();
-    updateNode(document.body);
+    updatePage();
     OBSERVER.observe(document.body, OBSERVE_OPTIONS);
   }, 1000);
 });
@@ -63,7 +63,15 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 
   if (ENABLED && namespace === "local") {
     DICT = await chrome.storage.local.get(null);
-    updateNode(document.body);
+    OBSERVER.disconnect();
+    console.time("custom dictionary updated in");
+
+    Object.keys(changes).forEach((text) => {
+      highlightTextsAndCreateTooltips(text, document.body);
+    });
+
+    console.timeEnd("custom dictionary updated in");
+    OBSERVER.disconnect();
   }
 });
 
@@ -91,7 +99,7 @@ async function updateEnabledStatus() {
 
   if (!wasEnabled && ENABLED) {
     DICT = await chrome.storage.local.get(null);
-    updateNode(document.body);
+    updatePage();
     OBSERVER.observe(document.body, OBSERVE_OPTIONS);
   }
 }
@@ -99,11 +107,11 @@ async function updateEnabledStatus() {
 /**
  * Scans the node and adds tooltips to words that are stored in DICT.
  */
-function updateNode(node) {
+function updatePage() {
   console.time("custom dictionary scanned in");
 
   Object.keys(DICT).forEach((text) => {
-    highlightTextsAndCreateTooltips(text, node);
+    highlightTextsAndCreateTooltips(text, document.body);
   });
 
   console.timeEnd("custom dictionary scanned in");
@@ -121,7 +129,7 @@ const IGNORED_TAGS = new Set([
   // Input elements
   "INPUT", "SELECT", "OPTION", "OPTGROUP",
   // Special elements
-  "IFRAME",
+  "IFRAME", "#comment"
 ]);
 
 /**
@@ -129,16 +137,17 @@ const IGNORED_TAGS = new Set([
  * When a user hovers over the text, a tooltip with the definition shows up.
  */
 function highlightTextsAndCreateTooltips(text, node) {
-  const queue = [...node.childNodes];
+  const queue = [];
+  node.childNodes.forEach((childNode) => {
+    (childNode.nodeType === Node.TEXT_NODE)
+      ? handleTextNode(childNode, text)
+      : queue.push(childNode);
+  });
+
   let currNode;
   while (currNode = queue.pop()) {
-    if (currNode.nodeType === Node.TEXT_NODE) {
-      handleTextNode(currNode, text);
-      continue;
-    }
-
     if (
-      IGNORED_TAGS.has(currNode.tagName)
+      IGNORED_TAGS.has(currNode.nodeName)
       || currNode.nodeType !== Node.ELEMENT_NODE
       || currNode.classList.contains("custom-dictionary-highlighted")
       || currNode.classList.contains("custom-dictionary-tooltip")
