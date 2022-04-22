@@ -66,12 +66,14 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     OBSERVER.disconnect();
     console.time("custom dictionary updated in");
 
-    Object.keys(changes).forEach((text) => {
-      highlightTextsAndCreateTooltips(text, document.body);
+    Object.entries(changes).forEach(([ text, { oldValue, newValue } ]) => {
+      newValue
+        ? highlightTextsAndCreateTooltips(text, document.body)
+        : removeHighlightedText(text);
     });
 
     console.timeEnd("custom dictionary updated in");
-    OBSERVER.disconnect();
+    OBSERVER.observe(document.body, OBSERVE_OPTIONS);
   }
 });
 
@@ -87,13 +89,17 @@ async function updateEnabledStatus() {
   if (wasEnabled && !ENABLED) {
     clearTimeout(TIMEOUT);
     OBSERVER.disconnect();
-    HIGHLIGHTED_TEXTS.forEach((el) => {
-      const textNode = document.createTextNode(el.textContent);
-      el.parentNode.replaceChild(textNode, el);
+    HIGHLIGHTED_TEXTS.forEach((arr, text) => {
+      const textNode = document.createTextNode(text);
+      arr.forEach((node) => {
+        if (node.isConnected) {
+          node.parentNode.replaceChild(textNode.cloneNode(true), node);
+        }
+      });
     });
 
     document.normalize();
-    HIGHLIGHTED_TEXTS.length = 0;
+    HIGHLIGHTED_TEXTS.clear();
     return;
   }
 
@@ -213,7 +219,7 @@ HIGHLIGHTED_TEXT_PROTO.setAttribute("class", "custom-dictionary-highlighted");
 /**
  * Creates a highlighted text that shows a tooltip on hover.
  */
-const HIGHLIGHTED_TEXTS = [];
+const HIGHLIGHTED_TEXTS = new Map();
 function createHighlightedText(text) {
   const tooltip = getTooltip(text);
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
@@ -232,7 +238,9 @@ function createHighlightedText(text) {
     tooltip.style.visibility = "hidden";
   });
 
-  HIGHLIGHTED_TEXTS.push(highlightedText);
+  const arr = HIGHLIGHTED_TEXTS.get(text) ?? [];
+  arr.push(highlightedText);
+  HIGHLIGHTED_TEXTS.set(text, arr);
   return highlightedText;
 }
 
@@ -258,4 +266,21 @@ function getTooltip(text) {
   document.body.appendChild(tooltip);
   TOOLTIPS.set(text, tooltip);
   return tooltip;
+}
+
+/**
+ * Removes the highlighted texts of `text` from the page.
+ */
+function removeHighlightedText(text) {
+  OBSERVER.disconnect();
+  const textNode = document.createTextNode(text);
+  HIGHLIGHTED_TEXTS.get(text)?.forEach((node) => {
+    if (node.isConnected) {
+      node.parentNode.replaceChild(textNode.cloneNode(true), node);
+    }
+  });
+
+  document.normalize();
+  HIGHLIGHTED_TEXTS.delete(text);
+  OBSERVER.observe(document.body, OBSERVE_OPTIONS);
 }
