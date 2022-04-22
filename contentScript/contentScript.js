@@ -135,6 +135,7 @@ function highlightTextsAndCreateTooltips(text, node) {
       || currNode.nodeType !== Node.ELEMENT_NODE
       || currNode.classList.contains("custom-dictionary-highlighted")
       || currNode.classList.contains("custom-dictionary-tooltip")
+      || currNode.classList.contains("syntaxhighlighter-pre") // for confluence
       || !currNode.textContent.includes(text)
     ) {
       continue;
