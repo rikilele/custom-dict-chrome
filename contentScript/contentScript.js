@@ -189,13 +189,18 @@ function createHighlightedPassage(passage, text) {
 }
 
 /**
+ * Create a prototype of a highlighted text that can be cloned.
+ */
+const HIGHLIGHTED_TEXT_PROTO = document.createElement("span");
+HIGHLIGHTED_TEXT_PROTO.setAttribute("class", "custom-dictionary-highlighted");
+
+/**
  * Creates a highlighted text that shows a tooltip on hover.
  */
 function createHighlightedText(text) {
   const tooltip = getTooltip(text);
-  const highlightedText = document.createElement("span");
-  highlightedText.setAttribute("class", "custom-dictionary-highlighted");
-  highlightedText.appendChild(document.createTextNode(text));
+  const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
+  highlightedText.textContent = text;
   highlightedText.addEventListener("mouseenter", () => {
     const { top, left, width } = highlightedText.getBoundingClientRect();
     tooltip.style.cssText = `
@@ -214,6 +219,12 @@ function createHighlightedText(text) {
 }
 
 /**
+ * Create a prototype of a tooltip that can be cloned.
+ */
+const TOOLTIP_PROTO = document.createElement("div");
+TOOLTIP_PROTO.setAttribute("class", "custom-dictionary-tooltip");
+
+/**
  * Only a single tooltip element is created for each tooltip text.
  * That tooltip text will later be moved around the screen.
  */
@@ -224,9 +235,8 @@ function getTooltip(text) {
   }
 
   const tooltipText = DICT[text];
-  const tooltip = document.createElement("div");
-  tooltip.setAttribute("class", "custom-dictionary-tooltip");
-  tooltip.appendChild(document.createTextNode(tooltipText));
+  const tooltip = TOOLTIP_PROTO.cloneNode();
+  tooltip.textContent = tooltipText;
   document.body.appendChild(tooltip);
   TOOLTIPS.set(text, tooltip);
   return tooltip;
