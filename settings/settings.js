@@ -82,7 +82,7 @@ document.getElementById("submitAllowlist").addEventListener("click", async (e) =
 
   if (
     array === undefined
-    || json === null
+    || array === null
     || typeof array !== "object"
     || !(array instanceof Array)
     || array.some(val => typeof val !== "string")
