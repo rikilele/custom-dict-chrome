@@ -84,6 +84,7 @@ async function updateEnabledStatus() {
       el.parentNode.replaceChild(textNode, el);
     });
 
+    document.normalize();
     HIGHLIGHTED_TEXTS.length = 0;
     return;
   }
