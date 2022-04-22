@@ -198,12 +198,11 @@ function createHighlightedText(text) {
   highlightedText.appendChild(document.createTextNode(text));
   highlightedText.addEventListener("mouseenter", () => {
     const { top, left, width } = highlightedText.getBoundingClientRect();
-    tooltip.style.visibility = "visible";
-    tooltip.style.top = `${top}px`;
-    tooltip.style.left = `${left}px`;
-    tooltip.style.transform = `
-      translateY(-125%)
-      translateX(calc(-50% + ${width / 2}px))
+    tooltip.style.cssText = `
+      visibility: visible;
+      top: ${top}px;
+      left: ${left}px;
+      transform: translateY(-125%) translateX(calc(${width / 2}px - 50%));
     `;
   });
 
