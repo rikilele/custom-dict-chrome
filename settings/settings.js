@@ -30,6 +30,7 @@ document.getElementById("submitCustomDict").addEventListener("click", async (e) 
 
     if (
       json === undefined
+      || json === null
       || typeof json !== "object"
       || json instanceof Array
       || Object.values(json).some(val => typeof val !== "string")
@@ -81,6 +82,7 @@ document.getElementById("submitAllowlist").addEventListener("click", async (e) =
 
   if (
     array === undefined
+    || json === null
     || typeof array !== "object"
     || !(array instanceof Array)
     || array.some(val => typeof val !== "string")
