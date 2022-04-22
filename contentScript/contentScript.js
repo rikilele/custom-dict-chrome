@@ -186,8 +186,8 @@ function createHighlightedText(text) {
     tooltip.style.top = `${top}px`;
     tooltip.style.left = `${left}px`;
     tooltip.style.transform = `
-      translateY(-128%)
-      translateX(calc(-48% + ${width / 2}px))
+      translateY(-125%)
+      translateX(calc(-50% + ${width / 2}px))
     `;
   });
 
