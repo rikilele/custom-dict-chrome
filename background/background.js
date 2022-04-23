@@ -2,7 +2,6 @@
 
 const SELECTION = "customDictionarySelectionMenu";
 const TOGGLE_THIS = "customDictionaryToggleOnThisSite";
-const ALLOWED_PROTOCOLS = ["http:", "https:"];
 
 /**
  * Creates the context menu on start up.
@@ -100,7 +99,7 @@ async function getHostname() {
   }
 
   const { protocol, hostname } = new URL(tab.url);
-  if (!ALLOWED_PROTOCOLS.includes(protocol)) {
+  if (!["http:", "https:"].includes(protocol)) {
     return null;
   }
 
