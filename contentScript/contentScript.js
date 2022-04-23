@@ -207,9 +207,12 @@ function handleTextNode(textNode, targetText) {
  */
 function createHighlightedPassage(passage, text) {
   const fragment = new DocumentFragment();
+  const textNode = document.createTextNode("");
   passage.split(text).forEach((str, i) => {
     (i !== 0) && fragment.appendChild(createHighlightedText(text));
-    fragment.appendChild(document.createTextNode(str));
+    const strNode = textNode.cloneNode();
+    strNode.textContent = str;
+    fragment.appendChild(strNode);
   });
 
   return fragment;
