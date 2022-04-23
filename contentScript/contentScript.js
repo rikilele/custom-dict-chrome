@@ -1,5 +1,12 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
+/*************
+ * CONSTANTS *
+ *************/
+
+const HIGHLIGHTED_CLASS = "custom-dictionary-highlighted";
+const TOOLTIP_CLASS = "custom-dictionary-tooltip";
+
 /****************
  * CONTEXT MENU *
  ****************/
@@ -89,17 +96,15 @@ async function updateEnabledStatus() {
   if (wasEnabled && !ENABLED) {
     clearTimeout(TIMEOUT);
     OBSERVER.disconnect();
-    HIGHLIGHTED_TEXTS.forEach((arr, text) => {
-      const textNode = document.createTextNode(text);
-      arr.forEach((node) => {
-        if (node.isConnected) {
-          node.parentNode.replaceChild(textNode.cloneNode(true), node);
-        }
-      });
+    const textNode = document.createTextNode("");
+    const nodes = document.getElementsByClassName(HIGHLIGHTED_CLASS);
+    Array.from(nodes).forEach((node) => {
+      const newNode = textNode.cloneNode();
+      newNode.textContent = node.textContent
+      node.parentNode.replaceChild(newNode, node);
     });
 
     document.normalize();
-    HIGHLIGHTED_TEXTS.clear();
     return;
   }
 
@@ -155,8 +160,8 @@ function highlightTextsAndCreateTooltips(text, node) {
     if (
       IGNORED_TAGS.has(currNode.nodeName)
       || currNode.nodeType !== Node.ELEMENT_NODE
-      || currNode.classList.contains("custom-dictionary-highlighted")
-      || currNode.classList.contains("custom-dictionary-tooltip")
+      || currNode.classList.contains(HIGHLIGHTED_CLASS)
+      || currNode.classList.contains(TOOLTIP_CLASS)
       || currNode.classList.contains("syntaxhighlighter-pre") // for confluence
       || !currNode.textContent.includes(text)
     ) {
@@ -214,13 +219,12 @@ function createHighlightedPassage(passage, text) {
  * Create a prototype of a highlighted text that can be cloned.
  */
 const HIGHLIGHTED_TEXT_PROTO = document.createElement("span");
-HIGHLIGHTED_TEXT_PROTO.setAttribute("class", "custom-dictionary-highlighted");
+HIGHLIGHTED_TEXT_PROTO.className = HIGHLIGHTED_CLASS;
 HIGHLIGHTED_TEXT_PROTO.style.all = "unset"; // ignores css for <span>
 
 /**
  * Creates a highlighted text that shows a tooltip on hover.
  */
-const HIGHLIGHTED_TEXTS = new Map();
 function createHighlightedText(text) {
   const tooltip = getTooltip(text);
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
@@ -239,9 +243,6 @@ function createHighlightedText(text) {
     tooltip.style.visibility = "hidden";
   });
 
-  const arr = HIGHLIGHTED_TEXTS.get(text) ?? [];
-  arr.push(highlightedText);
-  HIGHLIGHTED_TEXTS.set(text, arr);
   return highlightedText;
 }
 
@@ -249,7 +250,7 @@ function createHighlightedText(text) {
  * Create a prototype of a tooltip that can be cloned.
  */
 const TOOLTIP_PROTO = document.createElement("div");
-TOOLTIP_PROTO.setAttribute("class", "custom-dictionary-tooltip");
+TOOLTIP_PROTO.className = TOOLTIP_CLASS;
 
 /**
  * Only a single tooltip element is created for each tooltip text.
@@ -275,13 +276,13 @@ function getTooltip(text) {
 function removeHighlightedText(text) {
   OBSERVER.disconnect();
   const textNode = document.createTextNode(text);
-  HIGHLIGHTED_TEXTS.get(text)?.forEach((node) => {
-    if (node.isConnected) {
+  const nodes = document.getElementsByClassName(HIGHLIGHTED_CLASS);
+  Array.from(nodes).forEach((node) => {
+    if (node.textContent === text) {
       node.parentNode.replaceChild(textNode.cloneNode(true), node);
     }
   });
 
   document.normalize();
-  HIGHLIGHTED_TEXTS.delete(text);
   OBSERVER.observe(document.body, OBSERVE_OPTIONS);
 }
