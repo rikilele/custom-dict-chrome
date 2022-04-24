@@ -4,23 +4,85 @@
  * CONSTANTS *
  *************/
 
+/**
+ * Class name of a highlighted text (registered word).
+ */
 const HIGHLIGHTED_CLASS = "custom-dictionary-highlighted";
-const TOOLTIP_CLASS = "custom-dictionary-tooltip";
-
-/****************
- * CONTEXT MENU *
- ****************/
 
 /**
- * Catches context menu click events from background.js
+ * Class name of a tooltip.
+ */
+const TOOLTIP_CLASS = "custom-dictionary-tooltip";
+
+/******************
+ * SETTINGS CACHE *
+ ******************/
+
+/**
+ * Whether this extension is enabled on this page or not.
+ */
+let ENABLED = false;
+
+/**
+ * The custom dictionary.
+ */
+let DICT = {};
+
+/**********************
+ * CLASS DECLARATIONS *
+ **********************/
+
+/**
+ * Observes DOM mutations, and fires debounced callbacks.
+ */
+class PageObserver {
+  _observer;
+  _observeOptions = { childList: true, subtree: true };
+  _timeout;
+
+  /**
+   * Creates a new PageObserver instance.
+   *
+   * @param {() => void} onMutation Called when a mutation is detected.
+   * @param {number} ms How long to wait for debounce. Defaults to 1000.
+   */
+  constructor(onMutation, ms = 1000) {
+    this._observer = new MutationObserver(() => {
+      clearTimeout(this._timeout);
+      this._timeout = setTimeout(() => {
+        this._observer.disconnect();
+        onMutation();
+        this._observer.observe(document.body, this._observeOptions);
+      }, ms);
+    });
+  }
+
+  observe() {
+    this._observer.observe(document.body, this._observeOptions);
+  }
+
+  disconnect() {
+    clearTimeout(this._timeout);
+    this._observer.disconnect();
+  }
+}
+
+/*****************
+ * CONTEXT MENUS *
+ *****************/
+
+/**
+ * Catches context menu click events notified by background.js.
  * Prompts the user to input the meaning of the selected text,
  * and stores it into chrome.storage.local.
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   sendResponse();
   const { selectionText } = request;
-  const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
-  meaning && chrome.storage.local.set({ [selectionText]: meaning });
+  if (selectionText) {
+    const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
+    meaning && chrome.storage.local.set({ [selectionText]: meaning });
+  }
 });
 
 /*********************
@@ -28,59 +90,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  *********************/
 
 /**
- * Store client-side cache for custom dictionary.
+ * Set up the PageObserver (DOM mutation observer) instance.
+ * Re-scans the document on DOM mutations.
  */
-let DICT = {};
-
-/**
- * Store client-side cache for whether this extension is enabled or not.
- */
-let ENABLED = false;
-
-/**
- * Re-scans the document body on DOM changes.
- * Starts observing after initial page load.
- * Debounce-enabled --- the update only runs after a 1 second steady state.
- */
-let TIMEOUT;
-const OBSERVE_OPTIONS = { childList: true, subtree: true };
-const OBSERVER = new MutationObserver(() => {
-  clearTimeout(TIMEOUT);
-  TIMEOUT = setTimeout(() => {
-    OBSERVER.disconnect();
-    updatePage();
-    OBSERVER.observe(document.body, OBSERVE_OPTIONS);
-  }, 1000);
+const OBSERVER = new PageObserver(() => {
+  updatePage();
 });
 
 /**
- * If enabled, scans and highlights on load and activates the DOM observer.
+ * Highlights texts + setup tooltips, and activates the DOM observer,
  */
-window.addEventListener("load", async () => {
+window.addEventListener("load", () => {
   updateEnabledStatus();
 });
 
 /**
  * Listen to changes to chrome storage, and act accordingly.
  */
-chrome.storage.onChanged.addListener(async (changes, namespace) => {
-  if (namespace === "sync") {
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  // The allowlist was modified
+  if (areaName === "sync") {
     updateEnabledStatus();
   }
 
-  if (ENABLED && namespace === "local") {
+  // The dictionary was modified
+  if (ENABLED && areaName === "local") {
     DICT = await chrome.storage.local.get(null);
     OBSERVER.disconnect();
-    console.time("custom dictionary updated in");
-
     Object.entries(changes).forEach(([ text, { oldValue, newValue } ]) => {
       newValue
         ? highlightTextsAndCreateTooltips(text, document.body)
         : removeHighlightedText(text);
     });
 
-    console.timeEnd("custom dictionary updated in");
-    OBSERVER.observe(document.body, OBSERVE_OPTIONS);
+    OBSERVER.observe();
   }
 });
 
@@ -88,30 +131,35 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
  * HELPERS *
  ***********/
 
+/**
+ * Checks whether the extension is enabled on the current page.
+ * Acts accordingly if newly enabled / disabled.
+ */
 async function updateEnabledStatus() {
   const wasEnabled = ENABLED;
   const { hostname } = new URL(document.URL);
   const { allowlist } = await chrome.storage.sync.get({ allowlist: [] })
   ENABLED = allowlist.includes(hostname);
+
+  // Newly enabled
+  if (!wasEnabled && ENABLED) {
+    DICT = await chrome.storage.local.get(null);
+    updatePage();
+    OBSERVER.observe();
+  }
+
+  // Newly disabled
   if (wasEnabled && !ENABLED) {
-    clearTimeout(TIMEOUT);
     OBSERVER.disconnect();
-    const textNode = document.createTextNode("");
     const nodes = document.getElementsByClassName(HIGHLIGHTED_CLASS);
+
+    // Use Array.from instead of for...of loop to lock items inside nodes
     Array.from(nodes).forEach((node) => {
-      const newNode = textNode.cloneNode();
-      newNode.textContent = node.textContent
+      const newNode = document.createTextNode(node.textContent);
       node.parentNode.replaceChild(newNode, node);
     });
 
     document.normalize();
-    return;
-  }
-
-  if (!wasEnabled && ENABLED) {
-    DICT = await chrome.storage.local.get(null);
-    updatePage();
-    OBSERVER.observe(document.body, OBSERVE_OPTIONS);
   }
 }
 
@@ -134,7 +182,7 @@ function updatePage() {
  */
 const IGNORED_TAGS = new Set([
   // Source elements
-  "SCRIPT", "STYLE", "NOSCRIPT",
+  "SCRIPT", "LINK", "STYLE", "NOSCRIPT",
   // Media elements
   "IMG", "VIDEO", "AUDIO", "CANVAS", "SVG", "MAP", "OBJECT",
   // Input elements
@@ -207,19 +255,26 @@ function handleTextNode(textNode, targetText) {
  */
 function createHighlightedPassage(passage, text) {
   const fragment = new DocumentFragment();
-  const textNode = document.createTextNode("");
   passage.split(text).forEach((str, i) => {
     (i !== 0) && fragment.appendChild(createHighlightedText(text));
-    const strNode = textNode.cloneNode();
-    strNode.textContent = str;
-    fragment.appendChild(strNode);
+    fragment.appendChild(document.createTextNode(str));
   });
 
   return fragment;
 }
 
 /**
+ * Create the single tooltip element and add it to the document body.
+ */
+const TOOLTIP = document.createElement("div");
+TOOLTIP.className = TOOLTIP_CLASS;
+document.body.appendChild(TOOLTIP);
+
+/**
  * Create a prototype of a highlighted text that can be cloned.
+ *
+ * Cloning an element is more performant than creating a new one each time.
+ * https://www.measurethat.net/Benchmarks/Show/18419/0/createelementspan-vs-clonenode
  */
 const HIGHLIGHTED_TEXT_PROTO = document.createElement("span");
 HIGHLIGHTED_TEXT_PROTO.className = HIGHLIGHTED_CLASS;
@@ -229,12 +284,13 @@ HIGHLIGHTED_TEXT_PROTO.style.all = "unset"; // ignores css for <span>
  * Creates a highlighted text that shows a tooltip on hover.
  */
 function createHighlightedText(text) {
-  const tooltip = getTooltip(text);
+  const tooltipText = DICT[text];
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
   highlightedText.textContent = text;
   highlightedText.addEventListener("mouseenter", () => {
+    TOOLTIP.textContent = tooltipText;
     const { top, left, width } = highlightedText.getBoundingClientRect();
-    tooltip.style.cssText = `
+    TOOLTIP.style.cssText = `
       visibility: visible;
       top: ${top}px;
       left: ${left}px;
@@ -243,34 +299,10 @@ function createHighlightedText(text) {
   });
 
   highlightedText.addEventListener("mouseleave", () => {
-    tooltip.style.visibility = "hidden";
+    TOOLTIP.style.visibility = "hidden";
   });
 
   return highlightedText;
-}
-
-/**
- * Create a prototype of a tooltip that can be cloned.
- */
-const TOOLTIP_PROTO = document.createElement("div");
-TOOLTIP_PROTO.className = TOOLTIP_CLASS;
-
-/**
- * Only a single tooltip element is created for each tooltip text.
- * That tooltip text will later be moved around the screen.
- */
-const TOOLTIPS = new Map();
-function getTooltip(text) {
-  if (TOOLTIPS.has(text)) {
-    return TOOLTIPS.get(text);
-  }
-
-  const tooltipText = DICT[text];
-  const tooltip = TOOLTIP_PROTO.cloneNode();
-  tooltip.textContent = tooltipText;
-  document.body.appendChild(tooltip);
-  TOOLTIPS.set(text, tooltip);
-  return tooltip;
 }
 
 /**
@@ -278,14 +310,15 @@ function getTooltip(text) {
  */
 function removeHighlightedText(text) {
   OBSERVER.disconnect();
-  const textNode = document.createTextNode(text);
   const nodes = document.getElementsByClassName(HIGHLIGHTED_CLASS);
+
+  // Use Array.from instead of for...of loop to lock items inside nodes
   Array.from(nodes).forEach((node) => {
     if (node.textContent === text) {
-      node.parentNode.replaceChild(textNode.cloneNode(true), node);
+      node.parentNode.replaceChild(document.createTextNode(text), node);
     }
   });
 
   document.normalize();
-  OBSERVER.observe(document.body, OBSERVE_OPTIONS);
+  OBSERVER.observe();
 }
