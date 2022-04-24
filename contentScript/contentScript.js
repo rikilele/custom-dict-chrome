@@ -28,6 +28,11 @@ let ENABLED = false;
  */
 let DICT = {};
 
+/**
+ * The words in the custom dictionary.
+ */
+let WORDS = [];
+
 /**********************
  * CLASS DECLARATIONS *
  **********************/
@@ -115,11 +120,11 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 
   // The dictionary was modified
   if (ENABLED && areaName === "local") {
-    DICT = await chrome.storage.local.get(null);
+    await updateCustomDictionary();
     OBSERVER.disconnect();
     Object.entries(changes).forEach(([ text, { oldValue, newValue } ]) => {
       newValue
-        ? highlightTextsAndCreateTooltips(text, document.body)
+        ? highlightTextsAndCreateTooltips([text], document.body)
         : removeHighlightedText(text);
     });
 
@@ -143,7 +148,7 @@ async function updateEnabledStatus() {
 
   // Newly enabled
   if (!wasEnabled && ENABLED) {
-    DICT = await chrome.storage.local.get(null);
+    await updateCustomDictionary();
     updatePage();
     OBSERVER.observe();
   }
@@ -163,17 +168,16 @@ async function updateEnabledStatus() {
   }
 }
 
+async function updateCustomDictionary() {
+  DICT = await chrome.storage.local.get(null);
+  WORDS = Object.keys(DICT);
+}
+
 /**
  * Scans the node and adds tooltips to words that are stored in DICT.
  */
 function updatePage() {
-  console.time("custom dictionary scanned in");
-
-  Object.keys(DICT).forEach((text) => {
-    highlightTextsAndCreateTooltips(text, document.body);
-  });
-
-  console.timeEnd("custom dictionary scanned in");
+  highlightTextsAndCreateTooltips(WORDS, document.body);
 }
 
 /**
@@ -195,11 +199,13 @@ const IGNORED_TAGS = new Set([
  * Looks for `text` in a given `node`, and highlights all occurrence of it.
  * When a user hovers over the text, a tooltip with the definition shows up.
  */
-function highlightTextsAndCreateTooltips(text, node) {
+function highlightTextsAndCreateTooltips(texts, node) {
+  console.time("custom dict");
+
   const queue = [];
   node.childNodes.forEach((childNode) => {
     (childNode.nodeType === Node.TEXT_NODE)
-      ? handleTextNode(childNode, text)
+      ? handleTextNode(childNode, texts)
       : queue.push(childNode);
   });
 
@@ -211,7 +217,7 @@ function highlightTextsAndCreateTooltips(text, node) {
       || currNode.classList.contains(HIGHLIGHTED_CLASS)
       || currNode.classList.contains(TOOLTIP_CLASS)
       || currNode.classList.contains("syntaxhighlighter-pre") // for confluence
-      || !currNode.textContent.includes(text)
+      || texts.every((text) => !currNode.textContent.includes(text))
     ) {
       continue;
     }
@@ -225,7 +231,7 @@ function highlightTextsAndCreateTooltips(text, node) {
         }
 
         case Node.TEXT_NODE: {
-          handleTextNode(childNode, text);
+          handleTextNode(childNode, texts);
           break;
         }
 
@@ -233,19 +239,34 @@ function highlightTextsAndCreateTooltips(text, node) {
       }
     });
   }
+
+  console.timeEnd("custom dict");
 }
 
 /**
- * Checks if the text node contains the targetText.
- * If so, replaces itself with a new node that has its targetTexts highlighted.
- * The highlighted texts will show a tooltip when hovered over.
+ * Replaces the `textNode` with a new fragment that contains highlighted texts.
+ * Highlighted texts are ones included in the `targetTexts` array.
  */
-function handleTextNode(textNode, targetText) {
-  const passage = textNode.textContent;
-  if (passage.includes(targetText)) {
-    const newNode = createHighlightedPassage(passage, targetText);
-    textNode.parentNode.replaceChild(newNode, textNode);
-  }
+function handleTextNode(textNode, targetTexts) {
+  const { textContent } = textNode;
+  const fragment = new DocumentFragment();
+  fragment.appendChild(document.createTextNode(textContent));
+  targetTexts.forEach((targetText) => {
+    if (!textContent.includes(targetText)) {
+      return;
+    }
+
+    // children of fragment are updated if they contain targetText
+    fragment.childNodes.forEach((child) => {
+      const passage = child.textContent;
+      if (child.nodeType === Node.TEXT_NODE && passage.includes(targetText)) {
+        const highlighted = createHighlightedPassage(passage, targetText);
+        fragment.replaceChild(highlighted, child);
+      }
+    });
+  });
+
+  textNode.parentNode.replaceChild(fragment, textNode);
 }
 
 /**
