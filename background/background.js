@@ -33,17 +33,17 @@ chrome.windows.onFocusChanged.addListener(updateContextMenu);
 /**
  * Reacts to clicks on context menus.
  */
-chrome.contextMenus.onClicked.addListener(async (e, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const {
     menuItemId,
     selectionText,
-  } = e;
+  } = info;
 
   switch (menuItemId) {
 
-    // User selected wants to register a new word
+    // User wants to register a new word
     case SELECTION: {
-      chrome.tabs.sendMessage(tab.id, { selectionText });
+      tab?.id && chrome.tabs.sendMessage(tab.id, { selectionText });
       break;
     }
 
