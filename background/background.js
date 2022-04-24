@@ -1,11 +1,28 @@
 // Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license.
 
-const SELECTION = "customDictionarySelectionMenu";
-const TOGGLE_THIS = "customDictionaryToggleOnThisSite";
+/*************
+ * CONSTANTS *
+ *************/
 
 /**
- * Creates the context menu on start up.
- * Calls `removeAll()` first because background.js can start up many times.
+ * A context menu ID.
+ * Assigned to menu prompting user to register a word to custom dict.
+ */
+const SELECTION = "customDictionarySelectionMenu";
+
+/**
+ * A context menu ID.
+ * Assigned to menu prompting user to toggle extension enable status on site.
+ */
+const TOGGLE_THIS = "customDictionaryToggleOnThisSite";
+
+/*****************
+ * CONTEXT MENUS *
+ *****************/
+
+/**
+ * Creates the context menus on start up.
+ * Calls `removeAll()` first because background.js can restart many times.
  */
 chrome.contextMenus.removeAll(() => {
   chrome.contextMenus.create({
@@ -24,7 +41,7 @@ chrome.contextMenus.removeAll(() => {
 });
 
 /**
- * Updates the context menu on URL change.
+ * Keeps the `TOGGLE_THIS` context menu content up-to-date.
  */
 chrome.tabs.onUpdated.addListener(updateContextMenu);
 chrome.tabs.onActivated.addListener(updateContextMenu);
@@ -75,6 +92,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
  * HELPERS *
  ***********/
 
+/**
+ * Updates the `TOGGLE_THIS` context menu to display the hostname of the
+ * currently viewed website, judging from the active tab + window.
+ */
 async function updateContextMenu() {
   const hostname = await getHostname();
   if (hostname === null) {
@@ -90,7 +111,9 @@ async function updateContextMenu() {
 }
 
 /**
- * @returns hostname if valid, `null` if not.
+ * Returns the hostname of the currently viewed page.
+ * Returns `null` if such a page doesn't exist,
+ * or the protocol of the page isn't http(s).
  */
 async function getHostname() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
