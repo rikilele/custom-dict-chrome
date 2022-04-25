@@ -52,10 +52,11 @@ class PageObserver {
    * @param {number} ms How long to wait for debounce. Defaults to 1000.
    */
   constructor(onMutation, ms = 1000) {
-    this._observer = new MutationObserver(() => {
+    this._observer = new MutationObserver((mutations) => {
       clearTimeout(this._timeout);
       this._timeout = setTimeout(() => {
         this._observer.disconnect();
+        // console.log(mutations);
         onMutation();
         this._observer.observe(document.body, this._observeOptions);
       }, ms);
@@ -202,15 +203,15 @@ const IGNORED_TAGS = new Set([
 function highlightTextsAndCreateTooltips(node, texts) {
   console.time("custom dict");
 
-  const queue = [];
-  node.childNodes.forEach((childNode) => {
+  const stack = [];
+  Array.from(node.childNodes).forEach((childNode) => {
     (childNode.nodeType === Node.TEXT_NODE)
       ? handleTextNode(childNode, texts)
-      : queue.push(childNode);
+      : stack.push(childNode);
   });
 
   let currNode;
-  while (currNode = queue.pop()) {
+  while (currNode = stack.pop()) {
     if (
       IGNORED_TAGS.has(currNode.nodeName)
       || currNode.nodeType !== Node.ELEMENT_NODE
@@ -222,11 +223,11 @@ function highlightTextsAndCreateTooltips(node, texts) {
       continue;
     }
 
-    currNode.childNodes.forEach((childNode) => {
+    Array.from(currNode.childNodes).forEach((childNode) => {
       switch (childNode.nodeType) {
 
         case Node.ELEMENT_NODE: {
-          queue.push(childNode);
+          stack.push(childNode);
           break;
         }
 
@@ -257,7 +258,7 @@ function handleTextNode(textNode, targetTexts) {
     }
 
     // children of fragment are updated if they contain targetText
-    fragment.childNodes.forEach((child) => {
+    Array.from(fragment.childNodes).forEach((child) => {
       const passage = child.textContent;
       if (child.nodeType === Node.TEXT_NODE && passage.includes(targetText)) {
         const highlighted = createHighlightedPassage(passage, targetText);
