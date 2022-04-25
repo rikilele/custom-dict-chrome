@@ -124,7 +124,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
     OBSERVER.disconnect();
     Object.entries(changes).forEach(([ text, { oldValue, newValue } ]) => {
       newValue
-        ? highlightTextsAndCreateTooltips([text], document.body)
+        ? highlightTextsAndCreateTooltips(document.body, [text])
         : removeHighlightedText(text);
     });
 
@@ -177,7 +177,7 @@ async function updateCustomDictionary() {
  * Scans the node and adds tooltips to words that are stored in DICT.
  */
 function updatePage() {
-  highlightTextsAndCreateTooltips(WORDS, document.body);
+  highlightTextsAndCreateTooltips(document.body, WORDS);
 }
 
 /**
@@ -199,7 +199,7 @@ const IGNORED_TAGS = new Set([
  * Looks for `text` in a given `node`, and highlights all occurrence of it.
  * When a user hovers over the text, a tooltip with the definition shows up.
  */
-function highlightTextsAndCreateTooltips(texts, node) {
+function highlightTextsAndCreateTooltips(node, texts) {
   console.time("custom dict");
 
   const queue = [];
