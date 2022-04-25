@@ -44,22 +44,30 @@ class PageObserver {
   _observer;
   _observeOptions = { childList: true, subtree: true };
   _timeout;
+  _ms;
 
   /**
    * Creates a new PageObserver instance.
    *
+   * The `onMutation` method call will be debounced.
+   * The debounce time is variable depending on how long `onMutation` takes.
+   *
    * @param {() => void} onMutation Called when a mutation is detected.
-   * @param {number} ms How long to wait for debounce. Defaults to 500.
+   * @param {number} ms Minimum debounce time. Defaults to 300 ms.
    */
-  constructor(onMutation, ms = 500) {
+  constructor(onMutation, ms = 300) {
+    this._ms = ms;
     this._observer = new MutationObserver((mutations) => {
       clearTimeout(this._timeout);
       this._timeout = setTimeout(() => {
         this._observer.disconnect();
-        // console.log(mutations);
-        onMutation();
+        const t0 = performance.now();
+        onMutation(mutations);
+        const t1 = performance.now();
+        const timeTaken = t1 - t0;
+        this._ms = Math.max(timeTaken * 4, ms);
         this._observer.observe(document.body, this._observeOptions);
-      }, ms);
+      }, this._ms);
     });
   }
 
