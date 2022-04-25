@@ -194,8 +194,6 @@ const IGNORED_TAGS = new Set([
  * When a user hovers over the text, a tooltip with the definition shows up.
  */
 function highlightTextsAndCreateTooltips(node, texts) {
-  console.time("custom dict");
-
   const stack = [];
   Array.from(node.childNodes).forEach((childNode) => {
     (childNode.nodeType === Node.TEXT_NODE)
@@ -233,8 +231,6 @@ function highlightTextsAndCreateTooltips(node, texts) {
       }
     });
   }
-
-  console.timeEnd("custom dict");
 }
 
 /**
