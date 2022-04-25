@@ -49,9 +49,9 @@ class PageObserver {
    * Creates a new PageObserver instance.
    *
    * @param {() => void} onMutation Called when a mutation is detected.
-   * @param {number} ms How long to wait for debounce. Defaults to 1000.
+   * @param {number} ms How long to wait for debounce. Defaults to 500.
    */
-  constructor(onMutation, ms = 1000) {
+  constructor(onMutation, ms = 500) {
     this._observer = new MutationObserver((mutations) => {
       clearTimeout(this._timeout);
       this._timeout = setTimeout(() => {
