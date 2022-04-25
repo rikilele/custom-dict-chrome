@@ -100,7 +100,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  * Re-scans the document on DOM mutations.
  */
 const OBSERVER = new PageObserver(() => {
-  updatePage();
+  highlightTextsAndCreateTooltips(document.body, WORDS);
 });
 
 /**
@@ -150,7 +150,7 @@ async function updateEnabledStatus() {
   // Newly enabled
   if (!wasEnabled && ENABLED) {
     await updateCustomDictionary();
-    updatePage();
+    highlightTextsAndCreateTooltips(document.body, WORDS);
     OBSERVER.observe();
   }
 
@@ -172,13 +172,6 @@ async function updateEnabledStatus() {
 async function updateCustomDictionary() {
   DICT = await chrome.storage.local.get(null);
   WORDS = Object.keys(DICT);
-}
-
-/**
- * Scans the node and adds tooltips to words that are stored in DICT.
- */
-function updatePage() {
-  highlightTextsAndCreateTooltips(document.body, WORDS);
 }
 
 /**
