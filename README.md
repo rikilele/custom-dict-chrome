@@ -12,22 +12,20 @@ Store words and their definitions, and highlight them on websites.
 
 ## Usage
 
-Highlight the text you want to register
+Select a word and click on the context menu.
 
-![highlight text](https://user-images.githubusercontent.com/17091013/163418693-845c6204-c0c0-4a0b-a21a-3e29f8dafcfd.png)
+(Make sure to enable the extension on the page too!)
 
-Right-click and select the context menu
+<img width="640" alt="click on context menu" src="https://user-images.githubusercontent.com/17091013/165110538-d957e30f-1a7f-4b1d-abf6-6dd4f4eded1a.png">
 
-![click on context menu](https://user-images.githubusercontent.com/17091013/163418804-3997d5cd-2f94-4b6f-89df-cc6dc0cd5e75.png)
+Add your custom definition.
 
-Add your custom definition
+<img width="640" alt="add custom definition" src="https://user-images.githubusercontent.com/17091013/165110556-75fdeca2-8eac-4df1-b1c4-4637f0ed0a71.png">
 
-![add custom definition](https://user-images.githubusercontent.com/17091013/163419027-3e8e1803-0951-426b-9ca6-0be95e9d8331.png)
+And voila! All registered texts will be highlighted, and you'll be able to hover over them to view the custom definition.
 
-And voila! All registered texts will be highlighted, and you'll be able to hover over them for the custom definition
+<img width="640" alt="hover over text" src="https://user-images.githubusercontent.com/17091013/165110564-698d991b-e3b6-4cd3-838a-9ac752f7d453.png">
 
-![hover over text for custom definition](https://user-images.githubusercontent.com/17091013/163419109-a70a89d6-6853-4281-b11d-4a6fb724e42a.png)
+You can also manually edit your custom dictionary and allowlist, by following the link in the extension popup.
 
-You can also manually edit your custom dictionary, by following the link in the extension popup (via the icon)
-
-<img width="587" alt="manually edit via extension popup" src="https://user-images.githubusercontent.com/17091013/163419296-75d13ed6-2e1d-46c0-893d-a8392507fd1d.png">
+<img width="640" alt="manually edit via popup" src="https://user-images.githubusercontent.com/17091013/165110534-18c5913a-3981-43bd-b75e-982a985e20bc.png">
