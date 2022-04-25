@@ -29,7 +29,6 @@
       "match_about_blank": true
     }
   ],
-  "minimum_chrome_version": "11.0",
   "offline_enabled": true,
   "options_page": "settings/settings.html",
   "permissions": [
