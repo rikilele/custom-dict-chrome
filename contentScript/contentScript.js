@@ -309,7 +309,9 @@ function createHighlightedText(text) {
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
   highlightedText.textContent = text;
   highlightedText.addEventListener("mouseenter", () => {
+    OBSERVER.disconnect();
     TOOLTIP.textContent = tooltipText;
+    OBSERVER.observe();
     const { top, left, width } = highlightedText.getBoundingClientRect();
     TOOLTIP.style.cssText = `
       visibility: visible;
