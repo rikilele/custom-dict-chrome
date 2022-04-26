@@ -45,6 +45,8 @@ class PageObserver {
   _observeOptions = { childList: true, subtree: true };
   _timeout;
   _mutatedNodes = new Set();
+  _ms;
+  _onMutation;
 
   /**
    * Creates a new PageObserver instance.
@@ -56,34 +58,12 @@ class PageObserver {
    * @param {number} ms Minimum debounce time. Defaults to 300 ms.
    */
   constructor(onMutation, ms = 300) {
+    this._ms = ms;
+    this._onMutation = onMutation;
     this._observer = new MutationObserver((mutationList) => {
       clearTimeout(this._timeout);
-
-      // Store mutated nodes
-      mutationList.forEach((mutation) => {
-        if (mutation.addedNodes.length > 0) {
-          mutation.addedNodes.forEach((node) => {
-            this._mutatedNodes.add(node);
-          });
-        }
-      });
-
-      // Register debounced callback
-      this._timeout = setTimeout(() => {
-        this._observer.disconnect();
-        const mutatedNodes = [];
-        if (this._mutatedNodes.has(document.body)) {
-          mutatedNodes.push(document.body);
-        } else {
-          this._mutatedNodes.forEach((node) => {
-            node.isConnected && mutatedNodes.push(node);
-          });
-        }
-
-        onMutation(mutatedNodes);
-        this._mutatedNodes.clear();
-        this._observer.observe(document.body, this._observeOptions);
-      }, ms);
+      this._storeMutatedNodes(mutationList);
+      this._registerDebouncedCallback();
     });
   }
 
@@ -94,6 +74,34 @@ class PageObserver {
   disconnect() {
     clearTimeout(this._timeout);
     this._observer.disconnect();
+  }
+
+  _storeMutatedNodes(mutationList) {
+    mutationList.forEach((mutation) => {
+      if (mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach((node) => {
+          this._mutatedNodes.add(node);
+        });
+      }
+    });
+  }
+
+  _registerDebouncedCallback() {
+    this._timeout = setTimeout(() => {
+      this._observer.disconnect();
+      const mutatedNodes = [];
+      if (this._mutatedNodes.has(document.body)) {
+        mutatedNodes.push(document.body);
+      } else {
+        this._mutatedNodes.forEach((node) => {
+          node.isConnected && mutatedNodes.push(node);
+        });
+      }
+
+      this._onMutation(mutatedNodes);
+      this._mutatedNodes.clear();
+      this._observer.observe(document.body, this._observeOptions);
+    }, this._ms);
   }
 }
 
