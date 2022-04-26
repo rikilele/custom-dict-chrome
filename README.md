@@ -4,11 +4,7 @@ Store words and their definitions, and highlight them on websites.
 
 ## Add to Chrome
 
-> Not available on the Chrome Web Store yet
-
-1. `git clone`
-1. Manage Extensions
-1. Load unpacked
+🔧 [via the Chrome Web Store](https://chrome.google.com/webstore/detail/custom-dictionary/gpenoconcglejhmajbjgajimkdpmcogg)
 
 ## Usage
 
