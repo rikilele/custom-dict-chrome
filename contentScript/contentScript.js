@@ -44,7 +44,7 @@ class PageObserver {
   _observer;
   _observeOptions = { childList: true, subtree: true };
   _timeout;
-  _ms;
+  _mutatedNodes = new Set();
 
   /**
    * Creates a new PageObserver instance.
@@ -52,22 +52,38 @@ class PageObserver {
    * The `onMutation` method call will be debounced.
    * The debounce time is variable depending on how long `onMutation` takes.
    *
-   * @param {() => void} onMutation Called when a mutation is detected.
+   * @param {(mutatedNodes: Node[]) => void} onMutation callback.
    * @param {number} ms Minimum debounce time. Defaults to 300 ms.
    */
   constructor(onMutation, ms = 300) {
-    this._ms = ms;
-    this._observer = new MutationObserver((mutations) => {
+    this._observer = new MutationObserver((mutationList) => {
       clearTimeout(this._timeout);
+
+      // Store mutated nodes
+      mutationList.forEach((mutation) => {
+        if (mutation.addedNodes.length > 0) {
+          mutation.addedNodes.forEach((node) => {
+            this._mutatedNodes.add(node);
+          });
+        }
+      });
+
+      // Register debounced callback
       this._timeout = setTimeout(() => {
         this._observer.disconnect();
-        const t0 = performance.now();
-        onMutation(mutations);
-        const t1 = performance.now();
-        const timeTaken = t1 - t0;
-        this._ms = Math.max(timeTaken * 4, ms);
+        const mutatedNodes = [];
+        if (this._mutatedNodes.has(document.body)) {
+          mutatedNodes.push(document.body);
+        } else {
+          this._mutatedNodes.forEach((node) => {
+            node.isConnected && mutatedNodes.push(node);
+          });
+        }
+
+        onMutation(mutatedNodes);
+        this._mutatedNodes.clear();
         this._observer.observe(document.body, this._observeOptions);
-      }, this._ms);
+      }, ms);
     });
   }
 
@@ -107,8 +123,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  * Set up the PageObserver (DOM mutation observer) instance.
  * Re-scans the document on DOM mutations.
  */
-const OBSERVER = new PageObserver(() => {
-  highlightTextsAndCreateTooltips(document.body, WORDS);
+const OBSERVER = new PageObserver((mutatedNodes) => {
+  mutatedNodes.forEach((node) => {
+    (node.nodeType === Node.TEXT_NODE)
+      ? handleTextNode(node, WORDS)
+      : highlightTextsAndCreateTooltips(node, WORDS);
+  });
 });
 
 /**
@@ -170,7 +190,7 @@ async function updateEnabledStatus() {
     // Use Array.from instead of for...of loop to lock items inside nodes
     Array.from(nodes).forEach((node) => {
       const newNode = document.createTextNode(node.textContent);
-      node.parentNode.replaceChild(newNode, node);
+      node.parentNode?.replaceChild(newNode, node);
     });
 
     document.normalize();
@@ -264,7 +284,7 @@ function handleTextNode(textNode, targetTexts) {
     });
   });
 
-  textNode.parentNode.replaceChild(fragment, textNode);
+  textNode.parentNode?.replaceChild(fragment, textNode);
 }
 
 /**
@@ -336,7 +356,7 @@ function removeHighlightedText(text) {
   // Use Array.from instead of for...of loop to lock items inside nodes
   Array.from(nodes).forEach((node) => {
     if (node.textContent === text) {
-      node.parentNode.replaceChild(document.createTextNode(text), node);
+      node.parentNode?.replaceChild(document.createTextNode(text), node);
     }
   });
 
