@@ -67,6 +67,7 @@ class PageObserver {
         const timeTaken = t1 - t0;
         this._ms = Math.max(timeTaken * 4, ms);
         this._observer.observe(document.body, this._observeOptions);
+        console.log(`custom dict: ${timeTaken} ms`);
       }, this._ms);
     });
   }
