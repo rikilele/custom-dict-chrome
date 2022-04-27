@@ -87,14 +87,10 @@ class PageObserver {
   _registerDebouncedCallback() {
     this._timeout = setTimeout(() => {
       this._observer.disconnect();
-      const mutatedNodes = [];
-      if (this._mutatedNodes.has(document.body)) {
-        mutatedNodes.push(document.body);
-      } else {
-        this._mutatedNodes.forEach((node) => {
-          node.isConnected && mutatedNodes.push(node);
-        });
-      }
+      console.time("custom dict (mutation)"); // debug
+      const mutatedNodes = this._mutatedNodes.has(document.body)
+        ? [document.body]
+        : [...this._mutatedNodes].filter((node) => node.isConnected);
 
       this._onMutation(mutatedNodes);
       this._mutatedNodes.clear();
