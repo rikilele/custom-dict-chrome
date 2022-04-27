@@ -50,9 +50,7 @@ class PageObserver {
 
   /**
    * Creates a new PageObserver instance.
-   *
    * The `onMutation` method call will be debounced.
-   * The debounce time is variable depending on how long `onMutation` takes.
    *
    * @param {(mutatedNodes: Node[]) => void} onMutation callback.
    * @param {number} ms Minimum debounce time. Defaults to 300 ms.
