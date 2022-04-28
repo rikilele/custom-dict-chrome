@@ -233,13 +233,20 @@ function highlightTextsAndCreateTooltips(node, texts) {
 
   let currNode;
   while (currNode = stack.pop()) {
+    const {
+      nodeName,
+      nodeType,
+      classList,
+      textContent, // KEEP: repeated access in texts.every() is expensive
+    } = currNode;
+
     if (
-      IGNORED_TAGS.has(currNode.nodeName)
-      || currNode.nodeType !== Node.ELEMENT_NODE
-      || currNode.classList.contains(HIGHLIGHTED_CLASS)
-      || currNode.classList.contains(TOOLTIP_CLASS)
-      || currNode.classList.contains("syntaxhighlighter-pre") // for confluence
-      || texts.every((text) => !currNode.textContent.includes(text))
+      IGNORED_TAGS.has(nodeName)
+      || nodeType !== Node.ELEMENT_NODE
+      || classList.contains(HIGHLIGHTED_CLASS)
+      || classList.contains(TOOLTIP_CLASS)
+      || classList.contains("syntaxhighlighter-pre") // for confluence
+      || texts.every((text) => !textContent.includes(text))
     ) {
       continue;
     }
