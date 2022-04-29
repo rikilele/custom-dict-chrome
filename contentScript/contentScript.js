@@ -87,7 +87,6 @@ class PageObserver {
   _registerDebouncedCallback() {
     this._timeout = setTimeout(() => {
       this._observer.disconnect();
-      console.time("custom dict (mutation)"); // debug
       const mutatedNodes = this._mutatedNodes.has(document.body)
         ? [document.body]
         : [...this._mutatedNodes].filter((node) => node.isConnected);
