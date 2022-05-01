@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Custom Dictionary",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "action": {
     "default_icon": {
       "16": "icons/16.png",
