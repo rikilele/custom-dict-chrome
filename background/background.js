@@ -27,7 +27,7 @@ const TOGGLE_THIS = "customDictionaryToggleOnThisSite";
 chrome.contextMenus.removeAll(() => {
   chrome.contextMenus.create({
     id: SELECTION,
-    title: "Add \"%s\" to custom dictionary",
+    title: "Edit definition of \"%s\"",
     contexts: ["selection"],
   });
 

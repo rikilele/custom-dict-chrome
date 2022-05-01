@@ -111,8 +111,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   sendResponse();
   const { selectionText } = request;
   if (selectionText) {
-    const meaning = prompt(`What is the meaning of "${selectionText}" ?`);
-    meaning && chrome.storage.local.set({ [selectionText]: meaning });
+    const message = `What is the definition of "${selectionText}" ?\n(Submit empty definition to delete word from dictionary)`;
+    const defaultText = DICT[selectionText];
+    const userInput = prompt(message, defaultText);
+    if (userInput === null) {
+      return;
+    }
+
+    userInput !== ""
+      ? chrome.storage.local.set({ [selectionText]: userInput })
+      : chrome.storage.local.remove(selectionText);
   }
 });
 
