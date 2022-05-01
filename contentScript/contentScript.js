@@ -46,18 +46,18 @@ class PageObserver {
   _timeout;
   _mutatedNodes = new Set();
   _ms;
-  _onMutation;
+  _handleMutation;
 
   /**
    * Creates a new PageObserver instance.
-   * The `onMutation` method call will be debounced.
+   * The `callback` method call will be debounced.
    *
-   * @param {(mutatedNodes: Node[]) => void} onMutation callback.
+   * @param {(mutatedNodes: Node[]) => void} callback
    * @param {number} ms Minimum debounce time. Defaults to 300 ms.
    */
-  constructor(onMutation, ms = 300) {
+  constructor(callback, ms = 300) {
     this._ms = ms;
-    this._onMutation = onMutation;
+    this._handleMutation = callback;
     this._observer = new MutationObserver((mutationList) => {
       clearTimeout(this._timeout);
       this._storeMutatedNodes(mutationList);
@@ -91,7 +91,7 @@ class PageObserver {
         ? [document.body]
         : [...this._mutatedNodes].filter((node) => node.isConnected);
 
-      this._onMutation(mutatedNodes);
+      this._handleMutation(mutatedNodes);
       this._mutatedNodes.clear();
       this._observer.observe(document.body, this._observeOptions);
     }, this._ms);
