@@ -186,6 +186,8 @@ async function updateEnabledStatus() {
   // Newly disabled
   if (wasEnabled && !ENABLED) {
     OBSERVER.disconnect();
+    DICT = {};
+    WORDS = [];
     const nodes = document.getElementsByClassName(HIGHLIGHTED_CLASS);
 
     // Use Array.from instead of for...of loop to lock items inside nodes
