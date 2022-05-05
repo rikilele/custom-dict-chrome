@@ -41,12 +41,12 @@ let WORDS = [];
  * Observes DOM mutations, and fires debounced callbacks.
  */
 class PageObserver {
-  _observer;
-  _observeOptions = { childList: true, subtree: true };
-  _timeout;
-  _mutatedNodes = new Set();
-  _ms;
-  _handleMutation;
+  #observer;
+  #observeOptions = { childList: true, subtree: true };
+  #timeout;
+  #mutatedNodes = new Set();
+  #ms;
+  #handleMutation;
 
   /**
    * Creates a new PageObserver instance.
@@ -56,45 +56,45 @@ class PageObserver {
    * @param {number} ms Minimum debounce time. Defaults to 300 ms.
    */
   constructor(callback, ms = 300) {
-    this._ms = ms;
-    this._handleMutation = callback;
-    this._observer = new MutationObserver((mutationList) => {
-      clearTimeout(this._timeout);
-      this._storeMutatedNodes(mutationList);
-      this._registerDebouncedCallback();
+    this.#ms = ms;
+    this.#handleMutation = callback;
+    this.#observer = new MutationObserver((mutationList) => {
+      clearTimeout(this.#timeout);
+      this.#storeMutatedNodes(mutationList);
+      this.#registerDebouncedCallback();
     });
   }
 
   observe() {
-    this._observer.observe(document.body, this._observeOptions);
+    this.#observer.observe(document.body, this.#observeOptions);
   }
 
   disconnect() {
-    clearTimeout(this._timeout);
-    this._observer.disconnect();
+    clearTimeout(this.#timeout);
+    this.#observer.disconnect();
   }
 
-  _storeMutatedNodes(mutationList) {
+  #storeMutatedNodes(mutationList) {
     mutationList.forEach((mutation) => {
       if (mutation.addedNodes.length > 0) {
         mutation.addedNodes.forEach((node) => {
-          this._mutatedNodes.add(node);
+          this.#mutatedNodes.add(node);
         });
       }
     });
   }
 
-  _registerDebouncedCallback() {
-    this._timeout = setTimeout(() => {
-      this._observer.disconnect();
-      const mutatedNodes = this._mutatedNodes.has(document.body)
+  #registerDebouncedCallback() {
+    this.#timeout = setTimeout(() => {
+      this.#observer.disconnect();
+      const mutatedNodes = this.#mutatedNodes.has(document.body)
         ? [document.body]
-        : [...this._mutatedNodes].filter((node) => node.isConnected);
+        : [...this.#mutatedNodes].filter((node) => node.isConnected);
 
-      this._handleMutation(mutatedNodes);
-      this._mutatedNodes.clear();
-      this._observer.observe(document.body, this._observeOptions);
-    }, this._ms);
+      this.#handleMutation(mutatedNodes);
+      this.#mutatedNodes.clear();
+      this.#observer.observe(document.body, this.#observeOptions);
+    }, this.#ms);
   }
 }
 
