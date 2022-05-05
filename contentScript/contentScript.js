@@ -41,8 +41,12 @@ let WORDS = [];
  * Observes DOM mutations, and fires debounced callbacks.
  */
 class PageObserver {
+
+  // Static attributes
+  #OBSERVE_OPTIONS = { childList: true, subtree: true };
+
+  // Non-static attributes
   #observer;
-  #observeOptions = { childList: true, subtree: true };
   #timeout;
   #mutatedNodes = new Set();
   #ms;
@@ -66,7 +70,7 @@ class PageObserver {
   }
 
   observe() {
-    this.#observer.observe(document.body, this.#observeOptions);
+    this.#observer.observe(document.body, this.#OBSERVE_OPTIONS);
   }
 
   disconnect() {
@@ -93,7 +97,7 @@ class PageObserver {
 
       this.#handleMutation(mutatedNodes);
       this.#mutatedNodes.clear();
-      this.#observer.observe(document.body, this.#observeOptions);
+      this.#observer.observe(document.body, this.#OBSERVE_OPTIONS);
     }, this.#ms);
   }
 }
