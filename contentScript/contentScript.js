@@ -356,8 +356,7 @@ document.body.appendChild(TOOLTIP);
  * Cloning an element is more performant than creating a new one each time.
  * https://www.measurethat.net/Benchmarks/Show/18419/0/createelementspan-vs-clonenode
  */
-const HIGHLIGHTED_TEXT_PROTO = document.createElement("span");
-HIGHLIGHTED_TEXT_PROTO.style.all = "unset"; // ignores css for <span>
+const HIGHLIGHTED_TEXT_PROTO = document.createElement("abbr");
 
 /**
  * Creates a highlighted text that shows a tooltip on hover.
