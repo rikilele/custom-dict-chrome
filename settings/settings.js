@@ -7,11 +7,35 @@
 window.addEventListener("load", () => {
   updateCustomDictView();
   updateAllowlistView();
+  updateHighlightStyleView();
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  (namespace === "local") && updateCustomDictView();
-  (namespace === "sync") && updateAllowlistView();
+  switch (namespace) {
+    case "local": {
+      updateCustomDictView();
+      break;
+    }
+
+    case "sync": {
+      updateAllowlistView();
+      updateHighlightStyleView();
+      break;
+    }
+
+    default: break;
+  }
+});
+
+/*******************
+ * HIGHLIGHT STYLE *
+ *******************/
+
+document.getElementsByName("highlightStyle").forEach((radio) => {
+  radio.addEventListener("change", (e) => {
+    const highlightStyle = e.target?.value ?? "none";
+    chrome.storage.sync.set({ highlightStyle });
+  });
 });
 
 /***************
@@ -117,6 +141,16 @@ document.getElementById("clearAllowlist").addEventListener("click", async (e) =>
 /***********
  * HELPERS *
  ***********/
+
+async function updateHighlightStyleView() {
+  const { highlightStyle } = await chrome.storage.sync.get("highlightStyle");
+  const radios = document.getElementsByName("highlightStyle");
+  radios.forEach((radio) => {
+    if (radio.value === highlightStyle) {
+      radio.checked = true;
+    }
+  });
+}
 
 async function updateCustomDictView() {
   const dict = await chrome.storage.local.get(null);

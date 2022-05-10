@@ -39,7 +39,7 @@ a:hover {
 }
 
 .quota {
-  text-align: right;
+  flex-grow: 1;
 }
 
 .buttons {
@@ -58,4 +58,29 @@ footer {
   justify-content: center;
   align-items: center;
   height: 8vh;
+}
+
+.highlighted {
+  background-color: rgba(255,215,0,.3) !important;
+}
+
+.underlined {
+  text-decoration-line: underline !important;
+  text-decoration-style: dotted !important;
+}
+
+.radios {
+  display: flex;
+  gap: 5vw;
+}
+
+.form-label {
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.form-label::before {
+  content: "#";
+  color: #0d6efd;
+  font-weight: 600;
 }

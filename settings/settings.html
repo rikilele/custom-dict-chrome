@@ -11,6 +11,25 @@
   </head>
   <body>
     <div class="mx-auto w-50 main">
+      <div>
+        <div class="form-label">
+          Select highlight style
+        </div>
+        <div class="radios">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" id="highlighted" name="highlightStyle" value="highlighted">
+            <label class="form-check-label highlighted" for="highlighted">Highlighted</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" id="underlined" name="highlightStyle" value="underlined">
+            <label class="form-check-label underlined" for="underlined">Underlined</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" id="none" name="highlightStyle" value="none" checked>
+            <label class="form-check-label" for="none">None</label>
+          </div>
+        </div>
+      </div>
       <form class="form">
         <div class="form-group userInput">
           <label for="customDict" class="form-label">
@@ -18,10 +37,10 @@
           </label>
           <textarea class="form-control textarea" id="customDict"></textarea>
         </div>
-        <div class="quota">
-          <span id="customDictQuota">N</span> quota used
-        </div>
         <div class="buttons">
+          <div class="quota">
+            <span id="customDictQuota">N</span> quota used
+          </div>
           <button id="submitCustomDict" type="button" class="btn btn-primary">Save custom dictionary</button>
           <button id="clearCustomDict" type="button" class="btn btn-secondary">Clear all</button>
         </div>
@@ -33,10 +52,10 @@
           </label>
           <textarea class="form-control textarea" id="allowlist"></textarea>
         </div>
-        <div class="quota">
-          <span id="allowlistQuota">N</span> quota used
-        </div>
         <div class="buttons">
+          <div class="quota">
+            <span id="allowlistQuota">N</span> quota used
+          </div>
           <button id="submitAllowlist" type="button" class="btn btn-primary">Save allowlist</button>
           <button id="clearAllowlist" type="button" class="btn btn-secondary">Clear all</button>
         </div>

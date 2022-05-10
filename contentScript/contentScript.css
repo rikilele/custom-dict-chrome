@@ -1,7 +1,12 @@
 /* Copyright (c) 2022 Riki Singh Khorana. All rights reserved. MIT license. */
 
-.custom-dictionary-highlighted {
+.custom-dictionary-highlighted.highlighted {
   background-color: rgba(255,215,0,.3) !important;
+}
+
+.custom-dictionary-highlighted.underlined {
+  text-decoration-line: underline !important;
+  text-decoration-style: dotted !important;
 }
 
 .custom-dictionary-tooltip {

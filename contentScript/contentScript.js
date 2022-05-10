@@ -33,6 +33,11 @@ let DICT = {};
  */
 let WORDS = [];
 
+/**
+ * The style of highlights (class name).
+ */
+let HIGHLIGHT_STYLE = "";
+
 /**********************
  * CLASS DECLARATIONS *
  **********************/
@@ -147,7 +152,8 @@ const OBSERVER = new PageObserver((mutatedNodes) => {
 /**
  * Highlights texts + setup tooltips, and activates the DOM observer,
  */
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
+  await updateHighlightStyle();
   updateEnabledStatus();
 });
 
@@ -157,6 +163,7 @@ window.addEventListener("load", () => {
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
   // The allowlist was modified
   if (areaName === "sync") {
+    await updateHighlightStyle();
     updateEnabledStatus();
   }
 
@@ -177,6 +184,18 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 /***********
  * HELPERS *
  ***********/
+
+/**
+ * Updates the highlight style.
+ */
+async function updateHighlightStyle() {
+  const { highlightStyle } = await chrome.storage.sync.get("highlightStyle");
+  HIGHLIGHT_STYLE = highlightStyle;
+  const nodes = document.getElementsByClassName(HIGHLIGHTED_CLASS);
+  Array.from(nodes).forEach((node) => {
+    node.className = `${HIGHLIGHTED_CLASS} ${highlightStyle}`;
+  });
+}
 
 /**
  * Checks whether the extension is enabled on the current page.
@@ -338,7 +357,6 @@ document.body.appendChild(TOOLTIP);
  * https://www.measurethat.net/Benchmarks/Show/18419/0/createelementspan-vs-clonenode
  */
 const HIGHLIGHTED_TEXT_PROTO = document.createElement("span");
-HIGHLIGHTED_TEXT_PROTO.className = HIGHLIGHTED_CLASS;
 HIGHLIGHTED_TEXT_PROTO.style.all = "unset"; // ignores css for <span>
 
 /**
@@ -347,6 +365,7 @@ HIGHLIGHTED_TEXT_PROTO.style.all = "unset"; // ignores css for <span>
 function createHighlightedText(text) {
   const tooltipText = DICT[text];
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
+  highlightedText.className = `${HIGHLIGHTED_CLASS} ${HIGHLIGHT_STYLE}`;
   highlightedText.textContent = text;
   highlightedText.addEventListener("mouseenter", () => {
     OBSERVER.disconnect();
