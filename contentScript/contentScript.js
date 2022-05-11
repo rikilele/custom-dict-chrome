@@ -357,6 +357,7 @@ document.body.appendChild(TOOLTIP);
  * https://www.measurethat.net/Benchmarks/Show/18419/0/createelementspan-vs-clonenode
  */
 const HIGHLIGHTED_TEXT_PROTO = document.createElement("abbr");
+HIGHLIGHTED_TEXT_PROTO.style.all = "unset";
 
 /**
  * Creates a highlighted text that shows a tooltip on hover.
