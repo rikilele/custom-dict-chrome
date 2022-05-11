@@ -362,13 +362,12 @@ const HIGHLIGHTED_TEXT_PROTO = document.createElement("abbr");
  * Creates a highlighted text that shows a tooltip on hover.
  */
 function createHighlightedText(text) {
-  const tooltipText = DICT[text];
   const highlightedText = HIGHLIGHTED_TEXT_PROTO.cloneNode();
   highlightedText.className = `${HIGHLIGHTED_CLASS} ${HIGHLIGHT_STYLE}`;
   highlightedText.textContent = text;
   highlightedText.addEventListener("mouseenter", () => {
     OBSERVER.disconnect();
-    TOOLTIP.textContent = tooltipText;
+    TOOLTIP.textContent = DICT[text];
     OBSERVER.observe();
     const { top, left, width } = highlightedText.getBoundingClientRect();
     TOOLTIP.style.cssText = `
