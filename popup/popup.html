@@ -3,10 +3,30 @@
 <!DOCTYPE html>
 <html>
   <body style="width: 300px;">
-    <div style="display: flex; justify-content: center; align-items: center;">
+    <div style="margin-bottom: 1rem;">
+      <div style="margin-bottom: 0.5rem;">
+        Select highlight style
+      </div>
+      <div>
+        <div>
+          <input type="radio" id="highlighted" name="highlightStyle" value="highlighted">
+          <label style="background-color: rgba(255,215,0,.3)" for="highlighted">Highlighted</label>
+        </div>
+        <div>
+          <input type="radio" id="underlined" name="highlightStyle" value="underlined">
+          <label style="text-decoration-line: underline; text-decoration-style: dotted;" for="underlined">Underlined</label>
+        </div>
+        <div>
+          <input type="radio" id="none" name="highlightStyle" value="none" checked>
+          <label for="none">None</label>
+        </div>
+      </div>
+    </div>
+    <div>
       Go to the&nbsp;
       <a href="../settings/settings.html" target="_blank" referrerpolicy="no-referrer">settings page</a>
-      &nbsp;to modify your settings.
+      &nbsp;to modify more settings.
     </div>
+    <script src="popup.js"></script>
   </body>
 </html>
