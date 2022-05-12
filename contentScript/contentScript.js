@@ -62,9 +62,9 @@ class PageObserver {
    * The `callback` method call will be debounced.
    *
    * @param {(mutatedNodes: Node[]) => void} callback
-   * @param {number} ms Minimum debounce time. Defaults to 300 ms.
+   * @param {number} ms Minimum debounce time. Defaults to 100 ms.
    */
-  constructor(callback, ms = 300) {
+  constructor(callback, ms = 100) {
     this.#ms = ms;
     this.#handleMutation = callback;
     this.#observer = new MutationObserver((mutationList) => {
